@@ -65,7 +65,7 @@
     <section class="hero"><div class="eyebrow"><span class="dot"></span> FREE ONLINE IMAGE TOOLS</div><h1>Your images.<br><em>Your way.</em></h1><p>Resize, convert, and compress your images in seconds. No account, no fuss — just drop a file and get to work.</p></section>
     <section class="app" aria-label="Image toolkit">
       <nav class="tabs" aria-label="Image tools">
-        <button class="tab active" data-mode="convert">⇄ &nbsp;Convert</button><button class="tab" data-mode="resize">↗ &nbsp;Resize</button><button class="tab" data-mode="compress">◈ &nbsp;Compress</button><button class="tab" data-mode="background">✦ &nbsp;Remove BG</button><button class="tab" data-mode="watermark">© &nbsp;Watermark</button>
+        <button class="tab active" data-mode="convert">⇄ &nbsp;Convert</button><button class="tab" data-mode="resize">↗ &nbsp;Resize</button><button class="tab" data-mode="compress">◈ &nbsp;Compress</button><button class="tab" data-mode="background">✦ &nbsp;Remove BG</button><button class="tab" data-mode="watermark">© &nbsp;Watermark</button><button class="tab" data-mode="crop">▣ &nbsp;Crop</button>
       </nav>
       <div class="workspace">
         <section class="left">
@@ -101,6 +101,13 @@
             <p class="sub" style="margin:0">AI removes the background and keeps the subject as a transparent PNG. The first run downloads the AI model and may take a little while.</p>
             <div class="field"><label for="bgModel">AI model</label><select id="bgModel"><option value="medium">Balanced — recommended</option><option value="small">Faster — lighter model</option></select></div>
             <label class="check"><input id="bgPreview" type="checkbox" checked> Show transparent result in preview</label>
+          </div>
+          <div class="controls hidden" id="cropControls">
+            <div class="field"><label for="cropRatio">Aspect ratio</label><select id="cropRatio"><option value="free">Free crop</option><option value="1:1">Square · 1:1</option><option value="4:5">Portrait · 4:5</option><option value="3:4">Portrait · 3:4</option><option value="16:9">Landscape · 16:9</option><option value="4:3">Landscape · 4:3</option><option value="original">Original ratio</option></select></div>
+            <p class="sub" style="margin:0">Set the crop area in pixels. The selected area is exported at its full resolution.</p>
+            <div class="pair"><div class="field"><label for="cropX">Left (px)</label><input id="cropX" type="number" min="0" value="0"></div><div class="field"><label for="cropY">Top (px)</label><input id="cropY" type="number" min="0" value="0"></div></div>
+            <div class="pair"><div class="field"><label for="cropW">Width (px)</label><input id="cropW" type="number" min="1" value="1"></div><div class="field"><label for="cropH">Height (px)</label><input id="cropH" type="number" min="1" value="1"></div></div>
+            <button class="secondary" id="cropCenter" type="button">Center crop area</button>
           </div>
           <div class="controls hidden" id="watermarkControls">
             <div class="field"><label for="watermarkText">Watermark text</label><input id="watermarkText" type="text" maxlength="80" value="© Mujib, S.Coc." placeholder="Enter watermark text"></div>
@@ -139,7 +146,7 @@
   const updateButtons = () => { const loaded=!!state.image; $('replaceBtn').disabled=!loaded; $('resetBtn').disabled=!loaded; $('processBtn').disabled=!loaded; };
   const setMode = mode => {
     state.mode=mode; tabs.forEach(t=>t.classList.toggle('active',t.dataset.mode===mode));
-    $('convertControls').classList.toggle('hidden',mode!=='convert'); $('resizeControls').classList.toggle('hidden',mode!=='resize'); $('compressControls').classList.toggle('hidden',mode!=='compress'); $('backgroundControls').classList.toggle('hidden',mode!=='background'); $('watermarkControls').classList.toggle('hidden',mode!=='watermark');
+    $('convertControls').classList.toggle('hidden',mode!=='convert'); $('resizeControls').classList.toggle('hidden',mode!=='resize'); $('compressControls').classList.toggle('hidden',mode!=='compress'); $('backgroundControls').classList.toggle('hidden',mode!=='background'); $('cropControls').classList.toggle('hidden',mode!=='crop'); $('watermarkControls').classList.toggle('hidden',mode!=='watermark');
     $('settingsTitle').textContent=mode==='convert'?'Conversion settings':mode==='resize'?'Resize settings':mode==='compress'?'Compression settings':mode==='background'?'Background remover':'Watermark';
     $('settingsSub').textContent=mode==='convert'?'Pick the format you need.':mode==='resize'?'Set the dimensions for your image.':mode==='compress'?'Balance file size and image quality.':mode==='background'?'Make the background transparent with AI.':'Add a signature or brand to your image.';
     resetOutput(); setResultStatus('');
@@ -154,14 +161,16 @@
       state.file=file; state.image=img; state.originalUrl=url; resetOutput();
       preview.src=url; preview.classList.remove('hidden'); emptyState.classList.add('hidden'); drop.classList.add('has-image');
       $('fileMeta').textContent=file.name+' · '+img.naturalWidth+' × '+img.naturalHeight+' px · '+prettyBytes(file.size);
-      $('width').value=img.naturalWidth; $('height').value=img.naturalHeight;
+      $('width').value=img.naturalWidth; $('height').value=img.naturalHeight; initCrop();
       setStatus('Image ready to process.','success'); updateButtons();
     };
     img.onerror=()=>{URL.revokeObjectURL(url);setStatus('Could not read this image. Try another file.','error');};
     img.src=url;
   };
+  const initCrop=()=>{if(!state.image)return;const iw=state.image.naturalWidth,ih=state.image.naturalHeight,v=$('cropRatio').value;let w=iw,h=ih;if(v!=='free'&&v!=='original'){const p=v.split(':').map(Number),ratio=p[0]/p[1];if(w/h>ratio)w=Math.round(h*ratio);else h=Math.round(w/ratio);} $('cropX').value=Math.round((iw-w)/2);$('cropY').value=Math.round((ih-h)/2);$('cropW').value=w;$('cropH').value=h;};
   const dimensions = () => {
     const img=state.image; let w=img.naturalWidth,h=img.naturalHeight;
+    if(state.mode==='crop'){const x=Number($('cropX').value),y=Number($('cropY').value);w=Number($('cropW').value);h=Number($('cropH').value);if(!Number.isInteger(x)||!Number.isInteger(y)||x<0||y<0||w<1||h<1||x+w>img.naturalWidth||y+h>img.naturalHeight)throw new Error('Crop area must fit inside the original image.');}
     if(state.mode==='resize'){
       const wi=parseInt($('width').value,10), he=parseInt($('height').value,10), ratio=img.naturalWidth/img.naturalHeight;
       if($('lockRatio').checked){
@@ -220,10 +229,10 @@
       resetOutput(); setStatus('Processing image…'); setResultStatus('');
       const {w,h}=dimensions(), canvas=document.createElement('canvas'); canvas.width=w;canvas.height=h;
       const ctx=canvas.getContext('2d',{alpha:true}); if(!ctx) throw new Error('Your browser does not support canvas processing.');
-      const type=state.mode==='convert'?$('format').value:state.mode==='resize'||state.mode==='watermark'?'image/png':$('compressFormat').value;
+      const type=state.mode==='convert'?$('format').value:state.mode==='resize'||state.mode==='watermark'||state.mode==='crop'?'image/png':$('compressFormat').value;
       const quality=state.mode==='convert'?Number($('quality').value)/100:state.mode==='resize'?Number($('resizeQuality').value)/100:Number($('compressQuality').value)/100;
       if(type==='image/jpeg'){ctx.fillStyle='#ffffff';ctx.fillRect(0,0,w,h);}
-      ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(state.image,0,0,w,h);
+      ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';if(state.mode==='crop'){const x=Number($('cropX').value),y=Number($('cropY').value);ctx.drawImage(state.image,x,y,w,h,0,0,w,h);}else ctx.drawImage(state.image,0,0,w,h);
       if(state.mode==='watermark'){
         const text=$('watermarkText').value.trim();
         if(!text) throw new Error('Enter watermark text first.');
@@ -260,6 +269,8 @@
   drop.addEventListener('dragleave',()=>drop.classList.remove('drag'));
   drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('drag');loadFile(e.dataTransfer.files[0]);});
   $('processBtn').addEventListener('click',processImage);
+  $('cropRatio').addEventListener('change',initCrop);
+  $('cropCenter').addEventListener('click',initCrop);
   $('downloadBtn').addEventListener('click',()=>{if(!state.outputUrl)return;const ext=state.outputType==='image/jpeg'?'jpg':state.outputType.split('/')[1]||'png';const a=document.createElement('a');a.href=state.outputUrl;a.download=safeName(state.file.name)+'-'+state.mode+'.'+ext;document.body.appendChild(a);a.click();a.remove();});
   const bindRange=(id,out,label)=>$(id).addEventListener('input',e=>{$(out).textContent=e.target.value+'%';if(label)$(label).textContent=e.target.value+'%';});
   bindRange('quality','qualityOut','qualityLabel');bindRange('resizeQuality','resizeQualityOut','resizeQualityLabel');bindRange('compressQuality','compressQualityOut','compressQualityLabel');bindRange('watermarkSize','watermarkSizeOut','watermarkSizeLabel');bindRange('watermarkOpacity','watermarkOpacityOut','watermarkOpacityLabel');

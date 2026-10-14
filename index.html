@@ -28,10 +28,10 @@
 .compare-head{display:flex;justify-content:space-between;padding:10px 12px;font-size:12px;font-weight:750}
 .compare-stage{position:relative;width:100%;aspect-ratio:4/3;overflow:hidden;background-color:#171925;background-image:linear-gradient(45deg,#ffffff0b 25%,transparent 25%),linear-gradient(-45deg,#ffffff0b 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#ffffff0b 75%),linear-gradient(-45deg,transparent 75%,#ffffff0b 75%);background-size:20px 20px;background-position:0 0,0 10px,10px -10px,-10px 0}
 .compare-stage img{position:absolute;width:100%;height:100%;inset:0;object-fit:contain}
-.compare-after{position:absolute;inset:0 auto 0 0;width:50%;overflow:hidden;border-right:2px solid #fff;box-shadow:2px 0 10px #0007}
+.compare-after{position:absolute;inset:0 0 0 auto;width:50%;overflow:hidden;border-left:2px solid #fff;box-shadow:-2px 0 10px #0007}
 .compare-after img{max-width:none}
 .compare-label{position:absolute;top:10px;padding:4px 8px;border-radius:6px;background:#10111ad9;color:#fff;font-size:11px;font-weight:750;z-index:2}
-.compare-label.before{right:10px}.compare-label.after{left:10px}
+.compare-label.before{left:10px}.compare-label.after{right:10px}
 .compare-range{width:calc(100% - 24px);margin:10px 12px 12px;accent-color:var(--purple)}
 .compare-note{padding:0 12px 10px;color:var(--muted);font-size:11px}
 
@@ -176,7 +176,7 @@
   const releaseOutput = () => { if(state.outputUrl) URL.revokeObjectURL(state.outputUrl); state.outputUrl=null; state.output=null; $('downloadBtn').disabled=true; };
   const resetOutput = () => { releaseOutput(); $('comparePanel').classList.add('hidden'); $('resultBox').textContent='Output details will appear here after processing.'; setResultStatus(''); };
   const applyCompare = value => {
-    $('compareAfterClip').style.width=value+'%';
+    $('compareAfterClip').style.width=(100-value)+'%';
     $('compareAfter').style.width=$('compareStage').clientWidth+'px';
     $('comparePercent').textContent=value+'%';
   };
@@ -292,24 +292,39 @@
   const processAIEnhance = async () => {
     if(!state.image||!state.originalUrl)return;
     resetOutput();$('processBtn').disabled=true;$('processBtn').textContent='Loading AI…';
-    setStatus('Loading ESRGAN AI model…');setResultStatus('First use downloads the AI engine and model. Keep this page open.');
-    let upscaler=null;
+    setStatus('Loading AI upscaler…');setResultStatus('Low-memory mode: the AI processes a resized working copy to reduce RAM use.');
+    let upscaler=null,workingCanvas=null;
     try{
       await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js');
       await loadScript('https://cdn.jsdelivr.net/npm/@upscalerjs/default-model@1.0.0/dist/umd/index.min.js');
       await loadScript('https://cdn.jsdelivr.net/npm/upscaler@1.0.0/dist/browser/umd/upscaler.min.js');
       if(!window.tf||!window.Upscaler||!window.DefaultUpscalerJSModel)throw new Error('AI model did not initialize. Please refresh and try again.');
+      // Reduce working input size before inference to lower peak RAM on phones.
+      const src=state.image, maxSide=768, ratio=Math.min(1,maxSide/Math.max(src.naturalWidth,src.naturalHeight));
+      const workW=Math.max(1,Math.round(src.naturalWidth*ratio)),workH=Math.max(1,Math.round(src.naturalHeight*ratio));
+      workingCanvas=document.createElement('canvas');workingCanvas.width=workW;workingCanvas.height=workH;
+      const wctx=workingCanvas.getContext('2d');if(!wctx)throw new Error('Could not prepare the image for AI processing.');
+      wctx.imageSmoothingEnabled=true;wctx.imageSmoothingQuality='high';wctx.drawImage(src,0,0,workW,workH);
       upscaler=new window.Upscaler({model:window.DefaultUpscalerJSModel});
-      $('processBtn').textContent='Enhancing…';setStatus('AI is enhancing your image…');setResultStatus('AI inference may take a few minutes on a phone.');
-      const result=await upscaler.upscale(state.image,{patchSize:64,padding:4,output:'src'});
+      $('processBtn').textContent='Enhancing…';setStatus('AI is enhancing a low-memory copy…');setResultStatus('Keep this tab open. Large images may take a while.');
+      const result=await upscaler.upscale(workingCanvas,{patchSize:32,padding:4,output:'src'});
       const outImg=new Image();
-      const blob=await new Promise((resolve,reject)=>{outImg.onload=()=>{const cv=document.createElement('canvas');cv.width=outImg.naturalWidth;cv.height=outImg.naturalHeight;if(cv.width*cv.height>40000000){resolve(null);return;}const cx=cv.getContext('2d');cx.drawImage(outImg,0,0);const sharp=Number($('enhanceSharp').value)/100;if(sharp>0){const temp=document.createElement('canvas');temp.width=cv.width;temp.height=cv.height;temp.getContext('2d').drawImage(cv,0,0);cx.globalAlpha=sharp*.25;cx.filter='contrast('+(100+sharp*25)+'%)';cx.drawImage(temp,0,0);cx.filter='none';cx.globalAlpha=1;}cv.toBlob(resolve,'image/png');};outImg.onerror=()=>reject(new Error('AI output could not be read.'));outImg.src=result;});
-      if(!blob)throw new Error('AI output is too large. Try a smaller original image.');
+      await new Promise((resolve,reject)=>{outImg.onload=resolve;outImg.onerror=()=>reject(new Error('AI output could not be read.'));outImg.src=result;});
+      const targetW=Math.min(4096,src.naturalWidth*2),targetH=Math.min(4096,src.naturalHeight*2);
+      if(targetW*targetH>16000000)throw new Error('The 2× output is too large for safer mobile processing. Try a smaller image.');
+      const cv=document.createElement('canvas');cv.width=targetW;cv.height=targetH;
+      const cx=cv.getContext('2d');if(!cx)throw new Error('Could not create output canvas.');
+      cx.imageSmoothingEnabled=true;cx.imageSmoothingQuality='high';cx.drawImage(outImg,0,0,targetW,targetH);
+      const sharp=Number($('enhanceSharp').value)/100;
+      if(sharp>0){const temp=document.createElement('canvas');temp.width=targetW;temp.height=targetH;const tc=temp.getContext('2d');tc.drawImage(cv,0,0);cx.globalAlpha=sharp*.2;cx.filter='contrast('+(100+sharp*20)+'%)';cx.drawImage(temp,0,0);cx.filter='none';cx.globalAlpha=1;temp.width=1;temp.height=1;}
+      const blob=await new Promise(resolve=>cv.toBlob(resolve,'image/png'));
+      if(!blob)throw new Error('Could not export the enhanced image.');
       state.output=blob;state.outputType='image/png';state.outputUrl=URL.createObjectURL(blob);updateCompare();preview.src=state.originalUrl;
-      $('resultBox').innerHTML='<div>Output: <strong>AI-enhanced PNG</strong></div><div style="margin-top:5px">Dimensions: <strong>'+outImg.naturalWidth+' × '+outImg.naturalHeight+' px</strong></div><div style="margin-top:5px">File size: <strong>'+prettyBytes(blob.size)+'</strong></div><div style="margin-top:5px">Engine: <strong>ESRGAN AI · 2×</strong></div>';
+      $('resultBox').innerHTML='<div>Output: <strong>AI-enhanced PNG</strong></div><div style="margin-top:5px">Dimensions: <strong>'+targetW+' × '+targetH+' px</strong></div><div style="margin-top:5px">File size: <strong>'+prettyBytes(blob.size)+'</strong></div><div style="margin-top:5px">Engine: <strong>ESRGAN AI · 2× output</strong></div><div style="margin-top:5px">Processing: <strong>low-memory mode</strong></div>';
       $('downloadBtn').disabled=false;setStatus('AI enhancement complete.','success');setResultStatus('Ready to download.','success');
-    }catch(err){console.error(err);setStatus(err.message||'AI enhancement failed.','error');setResultStatus('Check your internet connection and try a smaller image.','error');}
-    finally{if(upscaler&&typeof upscaler.dispose==='function')try{upscaler.dispose();}catch(e){}$('processBtn').disabled=!state.image;$('processBtn').textContent='Process image';}
+      cv.width=1;cv.height=1;
+    }catch(err){console.error(err);setStatus(err.message||'AI enhancement failed.','error');setResultStatus('If memory is high, close other tabs and try a smaller image.','error');}
+    finally{if(upscaler&&typeof upscaler.dispose==='function')try{upscaler.dispose();}catch(e){}if(workingCanvas){workingCanvas.width=1;workingCanvas.height=1;}if(window.tf&&window.tf.engine)try{window.tf.engine().startScope();window.tf.engine().endScope();}catch(e){}$('processBtn').disabled=!state.image;$('processBtn').textContent='Process image';}
   };
   const processImage = () => {
     if(!state.image) return;

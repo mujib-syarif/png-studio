@@ -16,6 +16,47 @@
     .workspace{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(260px,.85fr);min-height:440px}.left{padding:22px;border-right:1px solid var(--line)}.right{padding:22px;background:#ffffff02}.section-title{font-size:14px;font-weight:750;margin:0 0 5px}.sub{color:var(--muted);font-size:12px;margin:0 0 17px}.drop{border:1.5px dashed #41465e;border-radius:18px;min-height:280px;display:flex;align-items:center;justify-content:center;text-align:center;padding:22px;position:relative;transition:.2s;background:linear-gradient(145deg,#9b8cff06,#66d4ff03)}.drop.drag{border-color:var(--purple);background:#9b8cff12}.drop.has-image{border-style:solid;border-color:var(--line)}.drop-content{max-width:280px}.upload-icon{width:58px;height:58px;border-radius:18px;margin:0 auto 14px;display:grid;place-items:center;background:linear-gradient(135deg,#9b8cff20,#66d4ff18);font-size:26px}.drop h3{margin:0 0 5px;font-size:16px}.drop p{color:var(--muted);font-size:12px;margin:0 0 16px}.primary,.secondary{border:0;border-radius:12px;padding:11px 16px;font-weight:750;transition:transform .15s,opacity .15s}.primary{background:linear-gradient(100deg,#b3a4ff,#75dfff);color:#11121a}.secondary{background:var(--panel2);color:var(--text);border:1px solid var(--line)}button:hover{transform:translateY(-1px)}button:disabled{opacity:.4;cursor:not-allowed;transform:none}.preview{max-width:100%;max-height:330px;object-fit:contain;border-radius:8px;display:block;margin:auto}.filemeta{font-size:12px;color:var(--muted);margin-top:12px;overflow-wrap:anywhere}.hidden{display:none!important}
     .controls{display:grid;gap:16px}.field label,.field .label{display:flex;justify-content:space-between;gap:12px;font-size:12px;color:#d8daea;font-weight:650;margin-bottom:7px}.field input[type=number],.field select{width:100%;background:#0e1018;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px 11px;outline:none}.field input:focus,.field select:focus{border-color:var(--purple)}.pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}.check{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12px}.check input{accent-color:var(--purple)}input[type=range]{width:100%;accent-color:var(--purple)}.range-row{display:flex;align-items:center;gap:10px}.range-row output{font-size:12px;color:#d9d2ff;min-width:42px;text-align:right}.divider{height:1px;background:var(--line);margin:19px 0}.result{padding:12px;background:#0d1017;border:1px solid var(--line);border-radius:12px;font-size:12px;color:var(--muted);margin-top:15px}.result strong{color:var(--good)}.action-row{display:flex;gap:9px;margin-top:18px}.action-row button{flex:1}.status{font-size:12px;min-height:18px;margin-top:10px;color:var(--muted)}.status.error{color:#ff9aab}.status.success{color:var(--good)}.privacy{display:flex;justify-content:center;align-items:center;gap:8px;color:var(--muted);font-size:12px;margin:-35px auto 48px;text-align:center}.features{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:60px}.feature{border:1px solid var(--line);background:#ffffff03;border-radius:16px;padding:18px}.feature .ico{font-size:20px}.feature h3{font-size:14px;margin:9px 0 5px}.feature p{font-size:12px;color:var(--muted);margin:0}.footer{border-top:1px solid #ffffff0d;padding:22px 0 30px;color:var(--muted);font-size:12px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}.footer b{color:var(--text)}
     @media(max-width:720px){.wrap{width:calc(100% - 24px)}header{height:64px}.header-note{display:none}.hero{padding:42px 0 25px}h1{letter-spacing:-1.5px}.hero p{font-size:14px}.app{border-radius:18px;margin-bottom:55px}.workspace{grid-template-columns:1fr}.left{border-right:0;border-bottom:1px solid var(--line);padding:15px}.right{padding:18px}.drop{min-height:240px}.features{grid-template-columns:1fr;gap:10px;margin-bottom:45px}.feature{display:grid;grid-template-columns:30px 1fr;column-gap:8px}.feature .ico{grid-row:span 2}.feature h3{margin:0 0 3px}.feature p{grid-column:2}.privacy{margin-top:-30px}.tabs{padding:9px}.tab{padding:9px 12px;font-size:12px}}
+  
+    /* Compact mobile layout: reduce vertical gaps without changing the desktop design */
+    @media(max-width:720px){
+      body{line-height:1.38}
+      header{height:58px}
+      .hero{padding:27px 0 18px}
+      .eyebrow{padding:5px 10px;font-size:11px}
+      h1{font-size:36px;line-height:1.02;margin:14px 0 9px;letter-spacing:-1.2px}
+      .hero p{font-size:13px;line-height:1.4}
+      .app{margin-bottom:42px;border-radius:16px}
+      .tabs{padding:7px;gap:3px}
+      .tab{padding:7px 10px;border-radius:9px}
+      .left{padding:12px}
+      .right{padding:14px}
+      .section-title{font-size:13px;margin-bottom:3px}
+      .sub{font-size:11px;line-height:1.35;margin-bottom:11px}
+      .drop{min-height:175px;padding:14px;border-radius:14px}
+      .drop-content{max-width:260px}
+      .upload-icon{width:44px;height:44px;border-radius:13px;margin-bottom:9px;font-size:22px}
+      .drop h3{font-size:14px}
+      .drop p{font-size:11px;margin-bottom:10px}
+      .preview{max-height:230px}
+      .filemeta{font-size:11px;line-height:1.35;margin-top:8px}
+      .action-row{gap:7px;margin-top:10px}
+      .action-row button{padding:9px 10px;font-size:12px;border-radius:10px}
+      .status{font-size:11px;min-height:14px;margin-top:6px;line-height:1.3}
+      .controls{gap:11px}
+      .field label,.field .label{font-size:11px;margin-bottom:5px}
+      .field input[type=number],.field select{padding:8px 9px;font-size:12px}
+      .check{font-size:11px}
+      .divider{margin:13px 0}
+      .result{padding:9px;font-size:11px;line-height:1.35;margin-top:10px}
+      .privacy{font-size:11px;line-height:1.35;margin-top:-22px;margin-bottom:30px}
+      .features{gap:8px;margin-bottom:32px}
+      .feature{padding:12px;border-radius:13px;grid-template-columns:25px 1fr;column-gap:7px}
+      .feature .ico{font-size:17px}
+      .feature h3{font-size:12px}
+      .feature p{font-size:11px;line-height:1.35}
+      .footer{padding:16px 0 22px;gap:7px;font-size:11px}
+    }
+
   </style>
 </head>
 <body>

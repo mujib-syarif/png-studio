@@ -26,10 +26,10 @@
 
 .compare{margin-top:14px;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#0b0d14}
 .compare-head{display:flex;justify-content:space-between;padding:10px 12px;font-size:12px;font-weight:750}
-.compare-stage{position:relative;width:100%;aspect-ratio:4/3;overflow:hidden;background-color:#171925;background-image:linear-gradient(45deg,#ffffff0b 25%,transparent 25%),linear-gradient(-45deg,#ffffff0b 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#ffffff0b 75%),linear-gradient(-45deg,transparent 75%,#ffffff0b 75%);background-size:20px 20px;background-position:0 0,0 10px,10px -10px,-10px 0}
+.compare-stage{position:relative;width:100%;aspect-ratio:4/3;max-height:420px;overflow:hidden;background-color:#171925;background-image:linear-gradient(45deg,#ffffff0b 25%,transparent 25%),linear-gradient(-45deg,#ffffff0b 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#ffffff0b 75%),linear-gradient(-45deg,transparent 75%,#ffffff0b 75%);background-size:20px 20px;background-position:0 0,0 10px,10px -10px,-10px 0}
 .compare-stage img{position:absolute;width:100%;height:100%;inset:0;object-fit:contain}
 .compare-after{position:absolute;inset:0 0 0 auto;width:50%;overflow:hidden;border-left:2px solid #fff;box-shadow:-2px 0 10px #0007}
-.compare-after img{max-width:none}
+.compare-after img{width:100%;height:100%;max-width:none;object-fit:contain}
 .compare-label{position:absolute;top:10px;padding:4px 8px;border-radius:6px;background:#10111ad9;color:#fff;font-size:11px;font-weight:750;z-index:2}
 .compare-label.before{left:10px}.compare-label.after{right:10px}
 .compare-range{width:calc(100% - 24px);margin:10px 12px 12px;accent-color:var(--purple)}
@@ -176,16 +176,20 @@
   const releaseOutput = () => { if(state.outputUrl) URL.revokeObjectURL(state.outputUrl); state.outputUrl=null; state.output=null; $('downloadBtn').disabled=true; };
   const resetOutput = () => { releaseOutput(); $('comparePanel').classList.add('hidden'); $('resultBox').textContent='Output details will appear here after processing.'; setResultStatus(''); };
   const applyCompare = value => {
-    $('compareAfterClip').style.width=(100-value)+'%';
-    $('compareAfter').style.width=$('compareStage').clientWidth+'px';
+    const stage=$('compareStage'), after=$('compareAfterClip'), img=$('compareAfter');
+    after.style.width=value+'%';
+    img.style.width=stage.clientWidth+'px';
+    img.style.height=stage.clientHeight+'px';
     $('comparePercent').textContent=value+'%';
   };
   const updateCompare = () => {
     if(!state.originalUrl || !state.outputUrl){$('comparePanel').classList.add('hidden');return;}
     $('compareBefore').src=state.originalUrl;
     $('compareAfter').src=state.outputUrl;
+    const source=state.image;
+    if(source&&source.naturalWidth&&source.naturalHeight)$('compareStage').style.aspectRatio=source.naturalWidth+'/'+source.naturalHeight;
     $('comparePanel').classList.remove('hidden');
-    applyCompare(Number($('compareRange').value));
+    requestAnimationFrame(()=>applyCompare(Number($('compareRange').value)));
   };
   $('compareRange').addEventListener('input',e=>applyCompare(Number(e.target.value)));
   window.addEventListener('resize',()=>applyCompare(Number($('compareRange').value)));
@@ -270,7 +274,7 @@
         }
       });
       state.output=blob; state.outputType='image/png'; state.outputUrl=URL.createObjectURL(blob); updateCompare();
-      if($('bgPreview').checked) preview.src=state.outputUrl; else preview.src=state.originalUrl;
+      preview.src=state.originalUrl; // Keep the workspace as the original; show processed output only in Before/After and download.
       const w=state.image.naturalWidth, h=state.image.naturalHeight;
       $('resultBox').innerHTML='<div>Output: <strong>Transparent PNG</strong></div><div style="margin-top:5px">Dimensions: <strong>'+w+' × '+h+' px</strong></div><div style="margin-top:5px">File size: <strong>'+prettyBytes(blob.size)+'</strong></div><div style="margin-top:5px">Background removed in your browser.</div>';
       $('downloadBtn').disabled=false; setStatus('Background removed! Your original image is unchanged.','success'); setResultStatus('Ready to download as PNG.','success');

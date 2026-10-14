@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#10111a">
   <meta name="description" content="PNG Studio — tool gambar online gratis untuk mengubah format, mengubah ukuran, dan mengompres gambar langsung di browser.">
-  <title>PNG Studio — Your images, your way</title>
+  <title>PNG Studio — Image Tools</title>
   <style>
     :root{color-scheme:dark;--bg:#0d0e14;--panel:#151722;--panel2:#1b1e2b;--line:#292d3d;--text:#f5f6ff;--muted:#9ca3b8;--purple:#9b8cff;--blue:#66d4ff;--good:#8de5c0;--radius:20px}
     *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 80% -10%,#28234b 0,transparent 38%),var(--bg);color:var(--text);font:15px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh}
@@ -15,6 +15,18 @@
     .app{max-width:920px;margin:0 auto 60px;border:1px solid var(--line);background:#12141df0;border-radius:24px;overflow:hidden;box-shadow:0 24px 90px #0005}.tabs{display:flex;gap:5px;padding:12px;border-bottom:1px solid var(--line);background:#ffffff03;overflow-x:auto}.tab{border:0;background:transparent;color:var(--muted);padding:10px 16px;border-radius:12px;white-space:nowrap;font-weight:650}.tab.active{background:#9b8cff1b;color:#dcd6ff;box-shadow:inset 0 0 0 1px #9b8cff25}
     .workspace{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(260px,.85fr);min-height:440px}.left{padding:22px;border-right:1px solid var(--line)}.right{padding:22px;background:#ffffff02}.section-title{font-size:14px;font-weight:750;margin:0 0 5px}.sub{color:var(--muted);font-size:12px;margin:0 0 17px}.drop{border:1.5px dashed #41465e;border-radius:18px;min-height:280px;display:flex;align-items:center;justify-content:center;text-align:center;padding:22px;position:relative;transition:.2s;background:linear-gradient(145deg,#9b8cff06,#66d4ff03)}.drop.drag{border-color:var(--purple);background:#9b8cff12}.drop.has-image{border-style:solid;border-color:var(--line)}.drop-content{max-width:280px}.upload-icon{width:58px;height:58px;border-radius:18px;margin:0 auto 14px;display:grid;place-items:center;background:linear-gradient(135deg,#9b8cff20,#66d4ff18);font-size:26px}.drop h3{margin:0 0 5px;font-size:16px}.drop p{color:var(--muted);font-size:12px;margin:0 0 16px}.primary,.secondary{border:0;border-radius:12px;padding:11px 16px;font-weight:750;transition:transform .15s,opacity .15s}.primary{background:linear-gradient(100deg,#b3a4ff,#75dfff);color:#11121a}.secondary{background:var(--panel2);color:var(--text);border:1px solid var(--line)}button:hover{transform:translateY(-1px)}button:disabled{opacity:.4;cursor:not-allowed;transform:none}.preview{max-width:100%;max-height:330px;object-fit:contain;border-radius:8px;display:block;margin:auto}.filemeta{font-size:12px;color:var(--muted);margin-top:12px;overflow-wrap:anywhere}.hidden{display:none!important}
     .controls{display:grid;gap:16px}.field label,.field .label{display:flex;justify-content:space-between;gap:12px;font-size:12px;color:#d8daea;font-weight:650;margin-bottom:7px}.field input[type=number],.field select{width:100%;background:#0e1018;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px 11px;outline:none}.field input:focus,.field select:focus{border-color:var(--purple)}.pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}.check{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12px}.check input{accent-color:var(--purple)}input[type=range]{width:100%;accent-color:var(--purple)}.range-row{display:flex;align-items:center;gap:10px}.range-row output{font-size:12px;color:#d9d2ff;min-width:42px;text-align:right}.divider{height:1px;background:var(--line);margin:19px 0}.result{padding:12px;background:#0d1017;border:1px solid var(--line);border-radius:12px;font-size:12px;color:var(--muted);margin-top:15px}.result strong{color:var(--good)}.action-row{display:flex;gap:9px;margin-top:18px}.action-row button{flex:1}.status{font-size:12px;min-height:18px;margin-top:10px;color:var(--muted)}.status.error{color:#ff9aab}.status.success{color:var(--good)}.privacy{display:flex;justify-content:center;align-items:center;gap:8px;color:var(--muted);font-size:12px;margin:-35px auto 48px;text-align:center}.features{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:60px}.feature{border:1px solid var(--line);background:#ffffff03;border-radius:16px;padding:18px}.feature .ico{font-size:20px}.feature h3{font-size:14px;margin:9px 0 5px}.feature p{font-size:12px;color:var(--muted);margin:0}.footer{border-top:1px solid #ffffff0d;padding:22px 0 30px;color:var(--muted);font-size:12px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}.footer b{color:var(--text)}
+
+.compare{margin-top:14px;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#0b0d14}
+.compare-head{display:flex;justify-content:space-between;padding:10px 12px;font-size:12px;font-weight:750}
+.compare-stage{position:relative;width:100%;aspect-ratio:4/3;overflow:hidden;background-color:#171925;background-image:linear-gradient(45deg,#ffffff0b 25%,transparent 25%),linear-gradient(-45deg,#ffffff0b 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#ffffff0b 75%),linear-gradient(-45deg,transparent 75%,#ffffff0b 75%);background-size:20px 20px;background-position:0 0,0 10px,10px -10px,-10px 0}
+.compare-stage img{position:absolute;width:100%;height:100%;inset:0;object-fit:contain}
+.compare-after{position:absolute;inset:0 auto 0 0;width:50%;overflow:hidden;border-right:2px solid #fff;box-shadow:2px 0 10px #0007}
+.compare-after img{max-width:none}
+.compare-label{position:absolute;top:10px;padding:4px 8px;border-radius:6px;background:#10111ad9;color:#fff;font-size:11px;font-weight:750;z-index:2}
+.compare-label.before{right:10px}.compare-label.after{left:10px}
+.compare-range{width:calc(100% - 24px);margin:10px 12px 12px;accent-color:var(--purple)}
+.compare-note{padding:0 12px 10px;color:var(--muted);font-size:11px}
+
     @media(max-width:720px){.wrap{width:calc(100% - 24px)}header{height:64px}.header-note{display:none}.hero{padding:42px 0 25px}h1{letter-spacing:-1.5px}.hero p{font-size:14px}.app{border-radius:18px;margin-bottom:55px}.workspace{grid-template-columns:1fr}.left{border-right:0;border-bottom:1px solid var(--line);padding:15px}.right{padding:18px}.drop{min-height:240px}.features{grid-template-columns:1fr;gap:10px;margin-bottom:45px}.feature{display:grid;grid-template-columns:30px 1fr;column-gap:8px}.feature .ico{grid-row:span 2}.feature h3{margin:0 0 3px}.feature p{grid-column:2}.privacy{margin-top:-30px}.tabs{padding:9px}.tab{padding:9px 12px;font-size:12px}}
   
     /* Compact mobile layout: reduce vertical gaps without changing the desktop design */
@@ -60,21 +72,26 @@
   </style>
 </head>
 <body>
-  <header><div class="wrap" style="display:flex;align-items:center;justify-content:space-between"><a class="brand" href="#" aria-label="PNG Studio home"><span class="logo">P</span><span>PNG <span>Studio</span></span></a><div class="header-note">Simple tools. Beautiful results.</div></div></header>
+  <header><div class="wrap" style="display:flex;align-items:center;justify-content:space-between"><a class="brand" href="#" aria-label="PNG Studio home"><span class="logo">P</span><span>PNG <span>Studio</span></span></a><div class="header-note">Online image tools</div></div></header>
   <main class="wrap">
-    <section class="hero"><div class="eyebrow"><span class="dot"></span> FREE ONLINE IMAGE TOOLS</div><h1>Your images.<br><em>Your way.</em></h1><p>Resize, convert, and compress your images in seconds. No account, no fuss — just drop a file and get to work.</p></section>
+    <section class="hero"><div class="eyebrow"><span class="dot"></span> ONLINE IMAGE TOOLS</div><h1>Image tools.<br><em>Made simple.</em></h1><p>Resize, convert, compress, crop, add watermarks, and remove backgrounds directly in your browser.</p></section>
     <section class="app" aria-label="Image toolkit">
       <nav class="tabs" aria-label="Image tools">
-        <button class="tab active" data-mode="convert">⇄ &nbsp;Convert</button><button class="tab" data-mode="resize">↗ &nbsp;Resize</button><button class="tab" data-mode="compress">◈ &nbsp;Compress</button><button class="tab" data-mode="background">✦ &nbsp;Remove BG</button><button class="tab" data-mode="watermark">© &nbsp;Watermark</button><button class="tab" data-mode="crop">▣ &nbsp;Crop</button>
+        <button class="tab active" data-mode="convert">Convert</button><button class="tab" data-mode="resize">Resize</button><button class="tab" data-mode="compress">Compress</button><button class="tab" data-mode="background">Remove background</button><button class="tab" data-mode="watermark">Watermark</button><button class="tab" data-mode="crop">Crop</button>
       </nav>
       <div class="workspace">
         <section class="left">
           <h2 class="section-title">Your workspace</h2><p class="sub">Choose an image to get started.</p>
           <div class="drop" id="drop">
-            <div class="drop-content" id="emptyState"><div class="upload-icon">↥</div><h3>Drop your image here</h3><p>or choose a file from your device</p><button class="primary" id="chooseBtn">Choose image</button><p style="margin:12px 0 0">JPG, PNG, WebP, GIF, BMP · up to 20 MB</p></div>
+            <div class="drop-content" id="emptyState"><div class="upload-icon">+</div><h3>Drop your image here</h3><p>or choose a file from your device</p><button class="primary" id="chooseBtn">Choose image</button><p style="margin:12px 0 0">JPG, PNG, WebP, GIF, BMP · up to 20 MB</p></div>
             <img id="preview" class="preview hidden" alt="Image preview">
           </div>
           <input type="file" id="fileInput" accept="image/*" class="hidden">
+          <section class="compare hidden" id="comparePanel" aria-label="Before and after comparison">
+<div class="compare-head"><span>Before and after</span><span id="comparePercent">50%</span></div>
+<div class="compare-stage" id="compareStage"><img id="compareBefore" alt="Before processing"><div class="compare-after" id="compareAfterClip"><img id="compareAfter" alt="After processing"></div><span class="compare-label after">After</span><span class="compare-label before">Before</span></div>
+<input class="compare-range" id="compareRange" type="range" min="0" max="100" value="50" aria-label="Adjust before and after comparison">
+<div class="compare-note">Move the slider to compare the original image with the processed result.</div></section>
           <div class="filemeta" id="fileMeta">Your image stays on your device while you use these tools.</div>
           <div class="action-row"><button class="secondary" id="replaceBtn" disabled>Replace image</button><button class="secondary" id="resetBtn" disabled>Reset</button></div>
           <div class="status" id="status" role="status" aria-live="polite"></div>
@@ -118,16 +135,16 @@
           </div>
           <div class="divider"></div>
           <div class="result" id="resultBox">Output details will appear here after processing.</div>
-          <div class="action-row"><button class="primary" id="processBtn" disabled>Process image ↗</button><button class="secondary" id="downloadBtn" disabled>Download</button></div>
+          <div class="action-row"><button class="primary" id="processBtn" disabled>Process image</button><button class="secondary" id="downloadBtn" disabled>Download</button></div>
           <div class="status" id="resultStatus" role="status" aria-live="polite"></div>
         </aside>
       </div>
     </section>
-    <div class="privacy">♧ &nbsp; Privacy-first processing — your images aren't uploaded to a server.</div>
+    <div class="privacy">Privacy-first processing — your images are not uploaded to a server.</div>
     <section class="features">
-      <article class="feature"><div class="ico">⚡</div><h3>Fast by design</h3><p>Process images right in your browser, without waiting for uploads.</p></article>
-      <article class="feature"><div class="ico">🔒</div><h3>Private by default</h3><p>Your selected image stays on your device during processing.</p></article>
-      <article class="feature"><div class="ico">✦</div><h3>Free and simple</h3><p>No sign-up or complicated workflow. Just useful image tools.</p></article>
+      <article class="feature"><div class="ico">01</div><h3>Fast by design</h3><p>Process images right in your browser, without waiting for uploads.</p></article>
+      <article class="feature"><div class="ico">02</div><h3>Private by default</h3><p>Your selected image stays on your device during processing.</p></article>
+      <article class="feature"><div class="ico">03</div><h3>Free and simple</h3><p>No sign-up or complicated workflow. Just useful image tools.</p></article>
     </section>
     <footer class="footer"><span>© <span id="year"></span> <b>PNG Studio</b>. Made for creators.</span><span>Built with care by Mujib, S.Coc.</span></footer>
   </main>
@@ -142,13 +159,27 @@
   const prettyBytes = n => n < 1024 ? n+' B' : n < 1048576 ? (n/1024).toFixed(1)+' KB' : (n/1048576).toFixed(2)+' MB';
   const safeName = name => name.replace(/\.[^.]+$/, '').replace(/[^a-z0-9_-]+/gi,'-').replace(/^-+|-+$/g,'') || 'png-studio-image';
   const releaseOutput = () => { if(state.outputUrl) URL.revokeObjectURL(state.outputUrl); state.outputUrl=null; state.output=null; $('downloadBtn').disabled=true; };
-  const resetOutput = () => { releaseOutput(); $('resultBox').textContent='Output details will appear here after processing.'; setResultStatus(''); };
+  const resetOutput = () => { releaseOutput(); $('comparePanel').classList.add('hidden'); $('resultBox').textContent='Output details will appear here after processing.'; setResultStatus(''); };
+  const applyCompare = value => {
+    $('compareAfterClip').style.width=value+'%';
+    $('compareAfter').style.width=$('compareStage').clientWidth+'px';
+    $('comparePercent').textContent=value+'%';
+  };
+  const updateCompare = () => {
+    if(!state.originalUrl || !state.outputUrl){$('comparePanel').classList.add('hidden');return;}
+    $('compareBefore').src=state.originalUrl;
+    $('compareAfter').src=state.outputUrl;
+    $('comparePanel').classList.remove('hidden');
+    applyCompare(Number($('compareRange').value));
+  };
+  $('compareRange').addEventListener('input',e=>applyCompare(Number(e.target.value)));
+  window.addEventListener('resize',()=>applyCompare(Number($('compareRange').value)));
   const updateButtons = () => { const loaded=!!state.image; $('replaceBtn').disabled=!loaded; $('resetBtn').disabled=!loaded; $('processBtn').disabled=!loaded; };
   const setMode = mode => {
     state.mode=mode; tabs.forEach(t=>t.classList.toggle('active',t.dataset.mode===mode));
     $('convertControls').classList.toggle('hidden',mode!=='convert'); $('resizeControls').classList.toggle('hidden',mode!=='resize'); $('compressControls').classList.toggle('hidden',mode!=='compress'); $('backgroundControls').classList.toggle('hidden',mode!=='background'); $('cropControls').classList.toggle('hidden',mode!=='crop'); $('watermarkControls').classList.toggle('hidden',mode!=='watermark');
-    $('settingsTitle').textContent=mode==='convert'?'Conversion settings':mode==='resize'?'Resize settings':mode==='compress'?'Compression settings':mode==='background'?'Background remover':'Watermark';
-    $('settingsSub').textContent=mode==='convert'?'Pick the format you need.':mode==='resize'?'Set the dimensions for your image.':mode==='compress'?'Balance file size and image quality.':mode==='background'?'Make the background transparent with AI.':'Add a signature or brand to your image.';
+    $('settingsTitle').textContent=mode==='convert'?'Conversion settings':mode==='resize'?'Resize settings':mode==='compress'?'Compression settings':mode==='background'?'Background remover':mode==='watermark'?'Watermark':'Crop settings';
+    $('settingsSub').textContent=mode==='convert'?'Pick the format you need.':mode==='resize'?'Set the dimensions for your image.':mode==='compress'?'Balance file size and image quality.':mode==='background'?'Make the background transparent with AI.':mode==='watermark'?'Add a signature or brand to your image.':'Select the area to keep from your image.';
     resetOutput(); setResultStatus('');
   };
   const loadFile = file => {
@@ -209,7 +240,7 @@
           }
         }
       });
-      state.output=blob; state.outputType='image/png'; state.outputUrl=URL.createObjectURL(blob);
+      state.output=blob; state.outputType='image/png'; state.outputUrl=URL.createObjectURL(blob); updateCompare();
       if($('bgPreview').checked) preview.src=state.outputUrl; else preview.src=state.originalUrl;
       const w=state.image.naturalWidth, h=state.image.naturalHeight;
       $('resultBox').innerHTML='<div>Output: <strong>Transparent PNG</strong></div><div style="margin-top:5px">Dimensions: <strong>'+w+' × '+h+' px</strong></div><div style="margin-top:5px">File size: <strong>'+prettyBytes(blob.size)+'</strong></div><div style="margin-top:5px">Background removed in your browser.</div>';
@@ -252,7 +283,7 @@
       }
       canvas.toBlob(blob=>{
         if(!blob){setStatus('This format could not be created by your browser. Try JPG or WebP.','error');return;}
-        state.output=blob;state.outputType=blob.type||type;state.outputUrl=URL.createObjectURL(blob);
+        state.output=blob;state.outputType=blob.type||type;state.outputUrl=URL.createObjectURL(blob); updateCompare();
         preview.src=state.originalUrl;
         const diff=state.file.size-blob.size, pct=Math.round(Math.abs(diff)/state.file.size*100);
         const sizeText=diff>=0?'smaller by '+pct+'%':'larger by '+pct+'%';

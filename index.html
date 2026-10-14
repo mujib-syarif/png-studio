@@ -65,7 +65,7 @@
     <section class="hero"><div class="eyebrow"><span class="dot"></span> FREE ONLINE IMAGE TOOLS</div><h1>Your images.<br><em>Your way.</em></h1><p>Resize, convert, and compress your images in seconds. No account, no fuss — just drop a file and get to work.</p></section>
     <section class="app" aria-label="Image toolkit">
       <nav class="tabs" aria-label="Image tools">
-        <button class="tab active" data-mode="convert">⇄ &nbsp;Convert</button><button class="tab" data-mode="resize">↗ &nbsp;Resize</button><button class="tab" data-mode="compress">◈ &nbsp;Compress</button>
+        <button class="tab active" data-mode="convert">⇄ &nbsp;Convert</button><button class="tab" data-mode="resize">↗ &nbsp;Resize</button><button class="tab" data-mode="compress">◈ &nbsp;Compress</button><button class="tab" data-mode="background">✦ &nbsp;Remove BG</button>
       </nav>
       <div class="workspace">
         <section class="left">
@@ -97,6 +97,11 @@
             <div class="field"><label for="maxWidth">Maximum width (optional)</label><input id="maxWidth" type="number" min="1" max="12000" placeholder="Keep original width"></div>
             <p class="sub" style="margin:0">Lower quality and smaller dimensions usually mean smaller files.</p>
           </div>
+          <div class="controls hidden" id="backgroundControls">
+            <p class="sub" style="margin:0">AI removes the background and keeps the subject as a transparent PNG. The first run downloads the AI model and may take a little while.</p>
+            <div class="field"><label for="bgModel">AI model</label><select id="bgModel"><option value="medium">Balanced — recommended</option><option value="small">Faster — lighter model</option></select></div>
+            <label class="check"><input id="bgPreview" type="checkbox" checked> Show transparent result in preview</label>
+          </div>
           <div class="divider"></div>
           <div class="result" id="resultBox">Output details will appear here after processing.</div>
           <div class="action-row"><button class="primary" id="processBtn" disabled>Process image ↗</button><button class="secondary" id="downloadBtn" disabled>Download</button></div>
@@ -127,9 +132,9 @@
   const updateButtons = () => { const loaded=!!state.image; $('replaceBtn').disabled=!loaded; $('resetBtn').disabled=!loaded; $('processBtn').disabled=!loaded; };
   const setMode = mode => {
     state.mode=mode; tabs.forEach(t=>t.classList.toggle('active',t.dataset.mode===mode));
-    $('convertControls').classList.toggle('hidden',mode!=='convert'); $('resizeControls').classList.toggle('hidden',mode!=='resize'); $('compressControls').classList.toggle('hidden',mode!=='compress');
-    $('settingsTitle').textContent=mode==='convert'?'Conversion settings':mode==='resize'?'Resize settings':'Compression settings';
-    $('settingsSub').textContent=mode==='convert'?'Pick the format you need.':mode==='resize'?'Set the dimensions for your image.':'Balance file size and image quality.';
+    $('convertControls').classList.toggle('hidden',mode!=='convert'); $('resizeControls').classList.toggle('hidden',mode!=='resize'); $('compressControls').classList.toggle('hidden',mode!=='compress'); $('backgroundControls').classList.toggle('hidden',mode!=='background');
+    $('settingsTitle').textContent=mode==='convert'?'Conversion settings':mode==='resize'?'Resize settings':mode==='compress'?'Compression settings':'Background remover';
+    $('settingsSub').textContent=mode==='convert'?'Pick the format you need.':mode==='resize'?'Set the dimensions for your image.':mode==='compress'?'Balance file size and image quality.':'Make the background transparent with AI.';
     resetOutput(); setResultStatus('');
   };
   const loadFile = file => {
@@ -163,8 +168,37 @@
     if(w*h>40000000) throw new Error('For safety, the output is limited to 40 megapixels.');
     return {w,h};
   };
+  const processBackground = async () => {
+    if(!state.image || !state.originalUrl) return;
+    resetOutput(); $('processBtn').disabled=true; $('processBtn').textContent='Removing…';
+    setStatus('Loading AI background remover…'); setResultStatus('This can take a little while on the first run.');
+    try {
+      // Image processing stays in-browser; only the AI model is downloaded.
+      const { removeBackground } = await import('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.7.0/+esm');
+      setStatus('AI is removing the background…');
+      const blob = await removeBackground(state.originalUrl, {
+        model: $('bgModel').value,
+        output: { format: 'image/png', quality: 0.95 },
+        progress: (key, current, total) => {
+          if(total > 0) setResultStatus('Loading AI model: '+Math.round(current/total*100)+'%');
+        }
+      });
+      state.output=blob; state.outputType='image/png'; state.outputUrl=URL.createObjectURL(blob);
+      if($('bgPreview').checked) preview.src=state.outputUrl; else preview.src=state.originalUrl;
+      const w=state.image.naturalWidth, h=state.image.naturalHeight;
+      $('resultBox').innerHTML='<div>Output: <strong>Transparent PNG</strong></div><div style="margin-top:5px">Dimensions: <strong>'+w+' × '+h+' px</strong></div><div style="margin-top:5px">File size: <strong>'+prettyBytes(blob.size)+'</strong></div><div style="margin-top:5px">Background removed in your browser.</div>';
+      $('downloadBtn').disabled=false; setStatus('Background removed! Your original image is unchanged.','success'); setResultStatus('Ready to download as PNG.','success');
+    } catch(err) {
+      console.error(err);
+      setStatus('Background remover failed to load or process. Check your internet connection and try again.','error');
+      setResultStatus('The AI model needs an internet connection on first use. If it keeps failing, try another image/browser.','error');
+    } finally {
+      $('processBtn').disabled=!state.image; $('processBtn').textContent='Process image ↗';
+    }
+  };
   const processImage = () => {
     if(!state.image) return;
+    if(state.mode==='background') { processBackground(); return; }
     try{
       resetOutput(); setStatus('Processing image…'); setResultStatus('');
       const {w,h}=dimensions(), canvas=document.createElement('canvas'); canvas.width=w;canvas.height=h;

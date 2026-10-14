@@ -16,6 +16,14 @@
     .workspace{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(260px,.85fr);min-height:440px}.left{padding:22px;border-right:1px solid var(--line)}.right{padding:22px;background:#ffffff02}.section-title{font-size:14px;font-weight:750;margin:0 0 5px}.sub{color:var(--muted);font-size:12px;margin:0 0 17px}.drop{border:1.5px dashed #41465e;border-radius:18px;min-height:280px;display:flex;align-items:center;justify-content:center;text-align:center;padding:22px;position:relative;transition:.2s;background:linear-gradient(145deg,#9b8cff06,#66d4ff03)}.drop.drag{border-color:var(--purple);background:#9b8cff12}.drop.has-image{border-style:solid;border-color:var(--line)}.drop-content{max-width:280px}.upload-icon{width:58px;height:58px;border-radius:18px;margin:0 auto 14px;display:grid;place-items:center;background:linear-gradient(135deg,#9b8cff20,#66d4ff18);font-size:26px}.drop h3{margin:0 0 5px;font-size:16px}.drop p{color:var(--muted);font-size:12px;margin:0 0 16px}.primary,.secondary{border:0;border-radius:12px;padding:11px 16px;font-weight:750;transition:transform .15s,opacity .15s}.primary{background:linear-gradient(100deg,#b3a4ff,#75dfff);color:#11121a}.secondary{background:var(--panel2);color:var(--text);border:1px solid var(--line)}button:hover{transform:translateY(-1px)}button:disabled{opacity:.4;cursor:not-allowed;transform:none}.preview{max-width:100%;max-height:330px;object-fit:contain;border-radius:8px;display:block;margin:auto}.filemeta{font-size:12px;color:var(--muted);margin-top:12px;overflow-wrap:anywhere}.hidden{display:none!important}
     .controls{display:grid;gap:16px}.field label,.field .label{display:flex;justify-content:space-between;gap:12px;font-size:12px;color:#d8daea;font-weight:650;margin-bottom:7px}.field input[type=number],.field select{width:100%;background:#0e1018;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px 11px;outline:none}.field input:focus,.field select:focus{border-color:var(--purple)}.pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}.check{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12px}.check input{accent-color:var(--purple)}input[type=range]{width:100%;accent-color:var(--purple)}.range-row{display:flex;align-items:center;gap:10px}.range-row output{font-size:12px;color:#d9d2ff;min-width:42px;text-align:right}.divider{height:1px;background:var(--line);margin:19px 0}.result{padding:12px;background:#0d1017;border:1px solid var(--line);border-radius:12px;font-size:12px;color:var(--muted);margin-top:15px}.result strong{color:var(--good)}.action-row{display:flex;gap:9px;margin-top:18px}.action-row button{flex:1}.status{font-size:12px;min-height:18px;margin-top:10px;color:var(--muted)}.status.error{color:#ff9aab}.status.success{color:var(--good)}.privacy{display:flex;justify-content:center;align-items:center;gap:8px;color:var(--muted);font-size:12px;margin:-35px auto 48px;text-align:center}.features{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:60px}.feature{border:1px solid var(--line);background:#ffffff03;border-radius:16px;padding:18px}.feature .ico{font-size:20px}.feature h3{font-size:14px;margin:9px 0 5px}.feature p{font-size:12px;color:var(--muted);margin:0}.footer{border-top:1px solid #ffffff0d;padding:22px 0 30px;color:var(--muted);font-size:12px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}.footer b{color:var(--text)}
 
+
+.crop-overlay{position:absolute;z-index:5;display:none;touch-action:none;border:2px solid #fff;box-shadow:0 0 0 9999px #05060bb8;cursor:move;min-width:24px;min-height:24px}
+.crop-overlay.visible{display:block}
+.crop-grid{position:absolute;inset:0;background:linear-gradient(to right,transparent 33.1%,#ffffff9c 33.3%,transparent 33.7%,transparent 66.3%,#ffffff9c 66.6%,transparent 66.9%),linear-gradient(to bottom,transparent 33.1%,#ffffff9c 33.3%,transparent 33.7%,transparent 66.3%,#ffffff9c 66.6%,transparent 66.9%);pointer-events:none}
+.crop-handle{position:absolute;width:16px;height:16px;border:2px solid #11121a;border-radius:4px;background:#fff;z-index:2;touch-action:none}
+.crop-handle.nw{left:-8px;top:-8px;cursor:nwse-resize}.crop-handle.ne{right:-8px;top:-8px;cursor:nesw-resize}.crop-handle.sw{left:-8px;bottom:-8px;cursor:nesw-resize}.crop-handle.se{right:-8px;bottom:-8px;cursor:nwse-resize}
+.enhance-note{font-size:11px;color:var(--muted);line-height:1.4;margin:0}
+
 .compare{margin-top:14px;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#0b0d14}
 .compare-head{display:flex;justify-content:space-between;padding:10px 12px;font-size:12px;font-weight:750}
 .compare-stage{position:relative;width:100%;aspect-ratio:4/3;overflow:hidden;background-color:#171925;background-image:linear-gradient(45deg,#ffffff0b 25%,transparent 25%),linear-gradient(-45deg,#ffffff0b 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#ffffff0b 75%),linear-gradient(-45deg,transparent 75%,#ffffff0b 75%);background-size:20px 20px;background-position:0 0,0 10px,10px -10px,-10px 0}
@@ -77,14 +85,14 @@
     <section class="hero"><div class="eyebrow"><span class="dot"></span> ONLINE IMAGE TOOLS</div><h1>Image tools.<br><em>Made simple.</em></h1><p>Resize, convert, compress, crop, add watermarks, and remove backgrounds directly in your browser.</p></section>
     <section class="app" aria-label="Image toolkit">
       <nav class="tabs" aria-label="Image tools">
-        <button class="tab active" data-mode="convert">Convert</button><button class="tab" data-mode="resize">Resize</button><button class="tab" data-mode="compress">Compress</button><button class="tab" data-mode="background">Remove background</button><button class="tab" data-mode="watermark">Watermark</button><button class="tab" data-mode="crop">Crop</button>
+        <button class="tab active" data-mode="convert">Convert</button><button class="tab" data-mode="resize">Resize</button><button class="tab" data-mode="compress">Compress</button><button class="tab" data-mode="background">Remove background</button><button class="tab" data-mode="watermark">Watermark</button><button class="tab" data-mode="crop">Crop</button><button class="tab" data-mode="enhance">Enhance</button>
       </nav>
       <div class="workspace">
         <section class="left">
           <h2 class="section-title">Your workspace</h2><p class="sub">Choose an image to get started.</p>
           <div class="drop" id="drop">
             <div class="drop-content" id="emptyState"><div class="upload-icon">+</div><h3>Drop your image here</h3><p>or choose a file from your device</p><button class="primary" id="chooseBtn">Choose image</button><p style="margin:12px 0 0">JPG, PNG, WebP, GIF, BMP · up to 20 MB</p></div>
-            <img id="preview" class="preview hidden" alt="Image preview">
+            <img id="preview" class="preview hidden" alt="Image preview"><div id="cropOverlay" class="crop-overlay" aria-label="Crop selection"><div class="crop-grid"></div><span class="crop-handle nw" data-handle="nw"></span><span class="crop-handle ne" data-handle="ne"></span><span class="crop-handle sw" data-handle="sw"></span><span class="crop-handle se" data-handle="se"></span></div>
           </div>
           <input type="file" id="fileInput" accept="image/*" class="hidden">
           <section class="compare hidden" id="comparePanel" aria-label="Before and after comparison">
@@ -125,6 +133,13 @@
             <div class="pair"><div class="field"><label for="cropX">Left (px)</label><input id="cropX" type="number" min="0" value="0"></div><div class="field"><label for="cropY">Top (px)</label><input id="cropY" type="number" min="0" value="0"></div></div>
             <div class="pair"><div class="field"><label for="cropW">Width (px)</label><input id="cropW" type="number" min="1" value="1"></div><div class="field"><label for="cropH">Height (px)</label><input id="cropH" type="number" min="1" value="1"></div></div>
             <button class="secondary" id="cropCenter" type="button">Center crop area</button>
+          </div>
+          <div class="controls hidden" id="enhanceControls">
+            <div class="field"><label for="enhanceScale">Output resolution</label><select id="enhanceScale"><option value="1">Original size · 1×</option><option value="1.5">Upscale · 1.5×</option><option value="2" selected>Upscale · 2×</option></select></div>
+            <div class="field"><label for="enhanceSharp">Sharpen <span id="enhanceSharpLabel">35%</span></label><div class="range-row"><input id="enhanceSharp" type="range" min="0" max="100" value="35"><output id="enhanceSharpOut">35%</output></div></div>
+            <div class="field"><label for="enhanceContrast">Contrast <span id="enhanceContrastLabel">105%</span></label><div class="range-row"><input id="enhanceContrast" type="range" min="80" max="130" value="105"><output id="enhanceContrastOut">105%</output></div></div>
+            <div class="field"><label for="enhanceSaturation">Saturation <span id="enhanceSaturationLabel">105%</span></label><div class="range-row"><input id="enhanceSaturation" type="range" min="0" max="150" value="105"><output id="enhanceSaturationOut">105%</output></div></div>
+            <p class="enhance-note">Upscaling adds pixels using browser interpolation; sharpening and color adjustments can improve appearance, but cannot recover detail that was never in the original.</p>
           </div>
           <div class="controls hidden" id="watermarkControls">
             <div class="field"><label for="watermarkText">Watermark text</label><input id="watermarkText" type="text" maxlength="80" value="© Mujib, S.Coc." placeholder="Enter watermark text"></div>
@@ -177,9 +192,9 @@
   const updateButtons = () => { const loaded=!!state.image; $('replaceBtn').disabled=!loaded; $('resetBtn').disabled=!loaded; $('processBtn').disabled=!loaded; };
   const setMode = mode => {
     state.mode=mode; tabs.forEach(t=>t.classList.toggle('active',t.dataset.mode===mode));
-    $('convertControls').classList.toggle('hidden',mode!=='convert'); $('resizeControls').classList.toggle('hidden',mode!=='resize'); $('compressControls').classList.toggle('hidden',mode!=='compress'); $('backgroundControls').classList.toggle('hidden',mode!=='background'); $('cropControls').classList.toggle('hidden',mode!=='crop'); $('watermarkControls').classList.toggle('hidden',mode!=='watermark');
-    $('settingsTitle').textContent=mode==='convert'?'Conversion settings':mode==='resize'?'Resize settings':mode==='compress'?'Compression settings':mode==='background'?'Background remover':mode==='watermark'?'Watermark':'Crop settings';
-    $('settingsSub').textContent=mode==='convert'?'Pick the format you need.':mode==='resize'?'Set the dimensions for your image.':mode==='compress'?'Balance file size and image quality.':mode==='background'?'Make the background transparent with AI.':mode==='watermark'?'Add a signature or brand to your image.':'Select the area to keep from your image.';
+    $('convertControls').classList.toggle('hidden',mode!=='convert'); $('resizeControls').classList.toggle('hidden',mode!=='resize'); $('compressControls').classList.toggle('hidden',mode!=='compress'); $('backgroundControls').classList.toggle('hidden',mode!=='background'); $('cropControls').classList.toggle('hidden',mode!=='crop'); $('watermarkControls').classList.toggle('hidden',mode!=='watermark'); $('enhanceControls').classList.toggle('hidden',mode!=='enhance'); $('cropOverlay').classList.toggle('visible',mode==='crop'&&!!state.image);
+    $('settingsTitle').textContent=mode==='convert'?'Conversion settings':mode==='resize'?'Resize settings':mode==='compress'?'Compression settings':mode==='background'?'Background remover':mode==='watermark'?'Watermark':mode==='enhance'?'Image enhance':'Crop settings';
+    $('settingsSub').textContent=mode==='convert'?'Pick the format you need.':mode==='resize'?'Set the dimensions for your image.':mode==='compress'?'Balance file size and image quality.':mode==='background'?'Make the background transparent with AI.':mode==='watermark'?'Add a signature or brand to your image.':mode==='enhance'?'Upscale resolution and tune image clarity.':'Drag the crop box or its corners on the image.';
     resetOutput(); setResultStatus('');
   };
   const loadFile = file => {
@@ -193,15 +208,29 @@
       preview.src=url; preview.classList.remove('hidden'); emptyState.classList.add('hidden'); drop.classList.add('has-image');
       $('fileMeta').textContent=file.name+' · '+img.naturalWidth+' × '+img.naturalHeight+' px · '+prettyBytes(file.size);
       $('width').value=img.naturalWidth; $('height').value=img.naturalHeight; initCrop();
-      setStatus('Image ready to process.','success'); updateButtons();
+      setStatus('Image ready to process.','success'); updateButtons(); if(state.mode==='crop')$('cropOverlay').classList.add('visible'); cropDisplay();
     };
     img.onerror=()=>{URL.revokeObjectURL(url);setStatus('Could not read this image. Try another file.','error');};
     img.src=url;
   };
-  const initCrop=()=>{if(!state.image)return;const iw=state.image.naturalWidth,ih=state.image.naturalHeight,v=$('cropRatio').value;let w=iw,h=ih;if(v!=='free'&&v!=='original'){const p=v.split(':').map(Number),ratio=p[0]/p[1];if(w/h>ratio)w=Math.round(h*ratio);else h=Math.round(w/ratio);} $('cropX').value=Math.round((iw-w)/2);$('cropY').value=Math.round((ih-h)/2);$('cropW').value=w;$('cropH').value=h;};
+  const cropBox={x:0,y:0,w:1,h:1};
+  const cropDisplay=()=>{if(!state.image)return;const pr=preview.getBoundingClientRect(),dr=drop.getBoundingClientRect();if(!pr.width||!pr.height)return;const sx=pr.width/state.image.naturalWidth,sy=pr.height/state.image.naturalHeight;const el=$('cropOverlay');el.style.left=(pr.left-dr.left+cropBox.x*sx)+'px';el.style.top=(pr.top-dr.top+cropBox.y*sy)+'px';el.style.width=(cropBox.w*sx)+'px';el.style.height=(cropBox.h*sy)+'px';};
+  const syncCropInputs=()=>{$('cropX').value=Math.round(cropBox.x);$('cropY').value=Math.round(cropBox.y);$('cropW').value=Math.round(cropBox.w);$('cropH').value=Math.round(cropBox.h);cropDisplay();};
+  const initCrop=()=>{if(!state.image)return;const iw=state.image.naturalWidth,ih=state.image.naturalHeight,v=$('cropRatio').value;let w=iw,h=ih;if(v!=='free'&&v!=='original'){const p=v.split(':').map(Number),ratio=p[0]/p[1];if(w/h>ratio)w=Math.round(h*ratio);else h=Math.round(w/ratio);}cropBox.x=Math.round((iw-w)/2);cropBox.y=Math.round((ih-h)/2);cropBox.w=w;cropBox.h=h;syncCropInputs();};
+  const ratioForCrop=()=>{const v=$('cropRatio').value;if(v==='free')return 0;if(v==='original')return state.image.naturalWidth/state.image.naturalHeight;const p=v.split(':').map(Number);return p[0]/p[1];};
+  let cropDrag=null;
+  $('cropOverlay').addEventListener('pointerdown',e=>{if(state.mode!=='crop'||!state.image)return;e.preventDefault();const pr=preview.getBoundingClientRect();cropDrag={startX:e.clientX,startY:e.clientY,box:{...cropBox},handle:e.target.dataset.handle||'move',sx:state.image.naturalWidth/pr.width,sy:state.image.naturalHeight/pr.height};$('cropOverlay').setPointerCapture(e.pointerId);});
+  $('cropOverlay').addEventListener('pointermove',e=>{if(!cropDrag)return;const dx=(e.clientX-cropDrag.startX)*cropDrag.sx,dy=(e.clientY-cropDrag.startY)*cropDrag.sy,b=cropDrag.box,ratio=ratioForCrop(),iw=state.image.naturalWidth,ih=state.image.naturalHeight,min=16;let x=b.x,y=b.y,w=b.w,h=b.h;const hd=cropDrag.handle;
+    if(hd==='move'){x=Math.max(0,Math.min(iw-b.w,b.x+dx));y=Math.max(0,Math.min(ih-b.h,b.y+dy));}
+    else {if(hd.includes('e'))w=Math.max(min,b.w+dx);if(hd.includes('s'))h=Math.max(min,b.h+dy);if(hd.includes('w')){x=Math.max(0,b.x+dx);w=b.w-(x-b.x);}if(hd.includes('n')){y=Math.max(0,b.y+dy);h=b.h-(y-b.y);}if(ratio){if(Math.abs(dx)>Math.abs(dy)){h=w/ratio;if(hd.includes('n'))y=b.y+b.h-h;}else{w=h*ratio;if(hd.includes('w'))x=b.x+b.w-w;}}w=Math.min(w,iw-x);h=Math.min(h,ih-y);x=Math.max(0,x);y=Math.max(0,y);}
+    cropBox.x=x;cropBox.y=y;cropBox.w=Math.max(1,w);cropBox.h=Math.max(1,h);syncCropInputs();
+  });
+  const endCropDrag=()=>{cropDrag=null;};$('cropOverlay').addEventListener('pointerup',endCropDrag);$('cropOverlay').addEventListener('pointercancel',endCropDrag);
+  ['cropX','cropY','cropW','cropH'].forEach(id=>$(id).addEventListener('change',()=>{if(!state.image)return;cropBox.x=Math.max(0,Number($('cropX').value)||0);cropBox.y=Math.max(0,Number($('cropY').value)||0);cropBox.w=Math.max(1,Number($('cropW').value)||1);cropBox.h=Math.max(1,Number($('cropH').value)||1);cropBox.w=Math.min(cropBox.w,state.image.naturalWidth-cropBox.x);cropBox.h=Math.min(cropBox.h,state.image.naturalHeight-cropBox.y);syncCropInputs();}));
+
   const dimensions = () => {
     const img=state.image; let w=img.naturalWidth,h=img.naturalHeight;
-    if(state.mode==='crop'){const x=Number($('cropX').value),y=Number($('cropY').value);w=Number($('cropW').value);h=Number($('cropH').value);if(!Number.isInteger(x)||!Number.isInteger(y)||x<0||y<0||w<1||h<1||x+w>img.naturalWidth||y+h>img.naturalHeight)throw new Error('Crop area must fit inside the original image.');}
+    if(state.mode==='crop'){const x=Math.round(cropBox.x),y=Math.round(cropBox.y);w=Math.round(cropBox.w);h=Math.round(cropBox.h);if(!Number.isInteger(x)||!Number.isInteger(y)||x<0||y<0||w<1||h<1||x+w>img.naturalWidth||y+h>img.naturalHeight)throw new Error('Crop area must fit inside the original image.');}
     if(state.mode==='resize'){
       const wi=parseInt($('width').value,10), he=parseInt($('height').value,10), ratio=img.naturalWidth/img.naturalHeight;
       if($('lockRatio').checked){
@@ -210,7 +239,7 @@
         else if(he>0) {h=he;w=Math.max(1,Math.round(h*ratio));}
       } else {w=wi||img.naturalWidth;h=he||img.naturalHeight;}
     }
-    if(state.mode==='compress'){const mw=parseInt($('maxWidth').value,10);if(mw>0 && w>mw){h=Math.round(h*mw/w);w=mw;}}
+    if(state.mode==='compress'){const mw=parseInt($('maxWidth').value,10);if(mw>0 && w>mw){h=Math.round(h*mw/w);w=mw;}} if(state.mode==='enhance'){const scale=Number($('enhanceScale').value)||1;w=Math.round(w*scale);h=Math.round(h*scale);}
     if(!Number.isFinite(w)||!Number.isFinite(h)||w<1||h<1||w>12000||h>12000) throw new Error('Dimensions must be between 1 and 12,000 pixels.');
     if(w*h>40000000) throw new Error('For safety, the output is limited to 40 megapixels.');
     return {w,h};
@@ -250,7 +279,7 @@
       setStatus('Background remover failed to load or process. Check your internet connection and try again.','error');
       setResultStatus('The AI model needs an internet connection on first use. If it keeps failing, try another image/browser.','error');
     } finally {
-      $('processBtn').disabled=!state.image; $('processBtn').textContent='Process image ↗';
+      $('processBtn').disabled=!state.image; $('processBtn').textContent='Process image';
     }
   };
   const processImage = () => {
@@ -260,10 +289,13 @@
       resetOutput(); setStatus('Processing image…'); setResultStatus('');
       const {w,h}=dimensions(), canvas=document.createElement('canvas'); canvas.width=w;canvas.height=h;
       const ctx=canvas.getContext('2d',{alpha:true}); if(!ctx) throw new Error('Your browser does not support canvas processing.');
-      const type=state.mode==='convert'?$('format').value:state.mode==='resize'||state.mode==='watermark'||state.mode==='crop'?'image/png':$('compressFormat').value;
+      const type=state.mode==='convert'?$('format').value:state.mode==='resize'||state.mode==='watermark'||state.mode==='crop'||state.mode==='enhance'?'image/png':$('compressFormat').value;
       const quality=state.mode==='convert'?Number($('quality').value)/100:state.mode==='resize'?Number($('resizeQuality').value)/100:Number($('compressQuality').value)/100;
       if(type==='image/jpeg'){ctx.fillStyle='#ffffff';ctx.fillRect(0,0,w,h);}
-      ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';if(state.mode==='crop'){const x=Number($('cropX').value),y=Number($('cropY').value);ctx.drawImage(state.image,x,y,w,h,0,0,w,h);}else ctx.drawImage(state.image,0,0,w,h);
+      ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+      if(state.mode==='crop'){ctx.drawImage(state.image,Math.round(cropBox.x),Math.round(cropBox.y),w,h,0,0,w,h);}
+      else if(state.mode==='enhance'){ctx.filter='contrast('+Number($('enhanceContrast').value)+'%) saturate('+Number($('enhanceSaturation').value)+'%)';ctx.drawImage(state.image,0,0,w,h);ctx.filter='none';const sharp=Number($('enhanceSharp').value)/100;if(sharp>0){const temp=document.createElement('canvas');temp.width=w;temp.height=h;const tc=temp.getContext('2d');tc.drawImage(canvas,0,0);ctx.globalAlpha=sharp*.35;ctx.filter='contrast('+(100+sharp*35)+'%)';ctx.drawImage(temp,0,0);ctx.filter='none';ctx.globalAlpha=1;}}
+      else ctx.drawImage(state.image,0,0,w,h);
       if(state.mode==='watermark'){
         const text=$('watermarkText').value.trim();
         if(!text) throw new Error('Enter watermark text first.');
@@ -300,11 +332,11 @@
   drop.addEventListener('dragleave',()=>drop.classList.remove('drag'));
   drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('drag');loadFile(e.dataTransfer.files[0]);});
   $('processBtn').addEventListener('click',processImage);
-  $('cropRatio').addEventListener('change',initCrop);
+  $('cropRatio').addEventListener('change',initCrop);window.addEventListener('resize',cropDisplay);
   $('cropCenter').addEventListener('click',initCrop);
   $('downloadBtn').addEventListener('click',()=>{if(!state.outputUrl)return;const ext=state.outputType==='image/jpeg'?'jpg':state.outputType.split('/')[1]||'png';const a=document.createElement('a');a.href=state.outputUrl;a.download=safeName(state.file.name)+'-'+state.mode+'.'+ext;document.body.appendChild(a);a.click();a.remove();});
   const bindRange=(id,out,label)=>$(id).addEventListener('input',e=>{$(out).textContent=e.target.value+'%';if(label)$(label).textContent=e.target.value+'%';});
-  bindRange('quality','qualityOut','qualityLabel');bindRange('resizeQuality','resizeQualityOut','resizeQualityLabel');bindRange('compressQuality','compressQualityOut','compressQualityLabel');bindRange('watermarkSize','watermarkSizeOut','watermarkSizeLabel');bindRange('watermarkOpacity','watermarkOpacityOut','watermarkOpacityLabel');
+  bindRange('enhanceSharp','enhanceSharpOut','enhanceSharpLabel');bindRange('enhanceContrast','enhanceContrastOut','enhanceContrastLabel');bindRange('enhanceSaturation','enhanceSaturationOut','enhanceSaturationLabel');bindRange('quality','qualityOut','qualityLabel');bindRange('resizeQuality','resizeQualityOut','resizeQualityLabel');bindRange('compressQuality','compressQualityOut','compressQualityLabel');bindRange('watermarkSize','watermarkSizeOut','watermarkSizeLabel');bindRange('watermarkOpacity','watermarkOpacityOut','watermarkOpacityLabel');
   $('width').addEventListener('input',()=>{if(state.image&&$('lockRatio').checked){const w=parseInt($('width').value,10);if(w>0)$('height').value=Math.round(w/state.image.naturalWidth*state.image.naturalHeight);}});
   $('height').addEventListener('input',()=>{if(state.image&&$('lockRatio').checked){const h=parseInt($('height').value,10);if(h>0)$('width').value=Math.round(h*state.image.naturalWidth/state.image.naturalHeight);}});
   $('year').textContent=new Date().getFullYear();

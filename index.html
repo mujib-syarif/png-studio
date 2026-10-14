@@ -17,7 +17,7 @@
     .controls{display:grid;gap:16px}.field label,.field .label{display:flex;justify-content:space-between;gap:12px;font-size:12px;color:#d8daea;font-weight:650;margin-bottom:7px}.field input[type=number],.field select{width:100%;background:#0e1018;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px 11px;outline:none}.field input:focus,.field select:focus{border-color:var(--purple)}.pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}.check{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12px}.check input{accent-color:var(--purple)}input[type=range]{width:100%;accent-color:var(--purple)}.range-row{display:flex;align-items:center;gap:10px}.range-row output{font-size:12px;color:#d9d2ff;min-width:42px;text-align:right}.divider{height:1px;background:var(--line);margin:19px 0}.result{padding:12px;background:#0d1017;border:1px solid var(--line);border-radius:12px;font-size:12px;color:var(--muted);margin-top:15px}.result strong{color:var(--good)}.action-row{display:flex;gap:9px;margin-top:18px}.action-row button{flex:1}.status{font-size:12px;min-height:18px;margin-top:10px;color:var(--muted)}.status.error{color:#ff9aab}.status.success{color:var(--good)}.privacy{display:flex;justify-content:center;align-items:center;gap:8px;color:var(--muted);font-size:12px;margin:-35px auto 48px;text-align:center}.features{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:60px}.feature{border:1px solid var(--line);background:#ffffff03;border-radius:16px;padding:18px}.feature .ico{font-size:20px}.feature h3{font-size:14px;margin:9px 0 5px}.feature p{font-size:12px;color:var(--muted);margin:0}.footer{border-top:1px solid #ffffff0d;padding:22px 0 30px;color:var(--muted);font-size:12px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}.footer b{color:var(--text)}
 
 
-.crop-overlay{position:absolute;z-index:5;display:none;touch-action:none;border:2px solid #fff;box-shadow:0 0 0 9999px #05060bb8;cursor:move;min-width:24px;min-height:24px}
+.crop-overlay{position:absolute;z-index:5;display:none;touch-action:none;border:2px solid #fff;box-shadow:none;background:#ffffff08;cursor:move;min-width:24px;min-height:24px}
 .crop-overlay.visible{display:block}
 .crop-grid{position:absolute;inset:0;background:linear-gradient(to right,transparent 33.1%,#ffffff9c 33.3%,transparent 33.7%,transparent 66.3%,#ffffff9c 66.6%,transparent 66.9%),linear-gradient(to bottom,transparent 33.1%,#ffffff9c 33.3%,transparent 33.7%,transparent 66.3%,#ffffff9c 66.6%,transparent 66.9%);pointer-events:none}
 .crop-handle{position:absolute;width:16px;height:16px;border:2px solid #11121a;border-radius:4px;background:#fff;z-index:2;touch-action:none}
@@ -135,11 +135,11 @@
             <button class="secondary" id="cropCenter" type="button">Center crop area</button>
           </div>
           <div class="controls hidden" id="enhanceControls">
-            <div class="field"><label for="enhanceScale">Output resolution</label><select id="enhanceScale"><option value="1">Original size · 1×</option><option value="1.5">Upscale · 1.5×</option><option value="2" selected>Upscale · 2×</option></select></div>
+            <div class="field"><label for="enhanceScale">AI super-resolution</label><select id="enhanceScale"><option value="2" selected>AI upscale · 2×</option></select></div>
             <div class="field"><label for="enhanceSharp">Sharpen <span id="enhanceSharpLabel">35%</span></label><div class="range-row"><input id="enhanceSharp" type="range" min="0" max="100" value="35"><output id="enhanceSharpOut">35%</output></div></div>
             <div class="field"><label for="enhanceContrast">Contrast <span id="enhanceContrastLabel">105%</span></label><div class="range-row"><input id="enhanceContrast" type="range" min="80" max="130" value="105"><output id="enhanceContrastOut">105%</output></div></div>
             <div class="field"><label for="enhanceSaturation">Saturation <span id="enhanceSaturationLabel">105%</span></label><div class="range-row"><input id="enhanceSaturation" type="range" min="0" max="150" value="105"><output id="enhanceSaturationOut">105%</output></div></div>
-            <p class="enhance-note">Upscaling adds pixels using browser interpolation; sharpening and color adjustments can improve appearance, but cannot recover detail that was never in the original.</p>
+            <p class="enhance-note">Uses an ESRGAN neural network to reconstruct finer-looking details at 2× resolution. The AI model is downloaded on first use and may take time on mobile devices.</p>
           </div>
           <div class="controls hidden" id="watermarkControls">
             <div class="field"><label for="watermarkText">Watermark text</label><input id="watermarkText" type="text" maxlength="80" value="© Mujib, S.Coc." placeholder="Enter watermark text"></div>
@@ -282,9 +282,39 @@
       $('processBtn').disabled=!state.image; $('processBtn').textContent='Process image';
     }
   };
+  const loadScript = src => new Promise((resolve,reject)=>{
+    const existing=[...document.scripts].find(s=>s.src===src);
+    if(existing){if(existing.dataset.loaded==='true')return resolve();existing.addEventListener('load',resolve,{once:true});existing.addEventListener('error',reject,{once:true});return;}
+    const script=document.createElement('script');script.src=src;script.async=true;
+    script.onload=()=>{script.dataset.loaded='true';resolve();};script.onerror=()=>reject(new Error('Could not load AI upscaling library.'));
+    document.head.appendChild(script);
+  });
+  const processAIEnhance = async () => {
+    if(!state.image||!state.originalUrl)return;
+    resetOutput();$('processBtn').disabled=true;$('processBtn').textContent='Loading AI…';
+    setStatus('Loading ESRGAN AI model…');setResultStatus('First use downloads the AI engine and model. Keep this page open.');
+    let upscaler=null;
+    try{
+      await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js');
+      await loadScript('https://cdn.jsdelivr.net/npm/@upscalerjs/default-model@1.0.0/dist/umd/index.min.js');
+      await loadScript('https://cdn.jsdelivr.net/npm/upscaler@1.0.0/dist/browser/umd/upscaler.min.js');
+      if(!window.tf||!window.Upscaler||!window.DefaultUpscalerJSModel)throw new Error('AI model did not initialize. Please refresh and try again.');
+      upscaler=new window.Upscaler({model:window.DefaultUpscalerJSModel});
+      $('processBtn').textContent='Enhancing…';setStatus('AI is enhancing your image…');setResultStatus('AI inference may take a few minutes on a phone.');
+      const result=await upscaler.upscale(state.image,{patchSize:64,padding:4,output:'src'});
+      const outImg=new Image();
+      const blob=await new Promise((resolve,reject)=>{outImg.onload=()=>{const cv=document.createElement('canvas');cv.width=outImg.naturalWidth;cv.height=outImg.naturalHeight;if(cv.width*cv.height>40000000){resolve(null);return;}const cx=cv.getContext('2d');cx.drawImage(outImg,0,0);const sharp=Number($('enhanceSharp').value)/100;if(sharp>0){const temp=document.createElement('canvas');temp.width=cv.width;temp.height=cv.height;temp.getContext('2d').drawImage(cv,0,0);cx.globalAlpha=sharp*.25;cx.filter='contrast('+(100+sharp*25)+'%)';cx.drawImage(temp,0,0);cx.filter='none';cx.globalAlpha=1;}cv.toBlob(resolve,'image/png');};outImg.onerror=()=>reject(new Error('AI output could not be read.'));outImg.src=result;});
+      if(!blob)throw new Error('AI output is too large. Try a smaller original image.');
+      state.output=blob;state.outputType='image/png';state.outputUrl=URL.createObjectURL(blob);updateCompare();preview.src=state.originalUrl;
+      $('resultBox').innerHTML='<div>Output: <strong>AI-enhanced PNG</strong></div><div style="margin-top:5px">Dimensions: <strong>'+outImg.naturalWidth+' × '+outImg.naturalHeight+' px</strong></div><div style="margin-top:5px">File size: <strong>'+prettyBytes(blob.size)+'</strong></div><div style="margin-top:5px">Engine: <strong>ESRGAN AI · 2×</strong></div>';
+      $('downloadBtn').disabled=false;setStatus('AI enhancement complete.','success');setResultStatus('Ready to download.','success');
+    }catch(err){console.error(err);setStatus(err.message||'AI enhancement failed.','error');setResultStatus('Check your internet connection and try a smaller image.','error');}
+    finally{if(upscaler&&typeof upscaler.dispose==='function')try{upscaler.dispose();}catch(e){}$('processBtn').disabled=!state.image;$('processBtn').textContent='Process image';}
+  };
   const processImage = () => {
     if(!state.image) return;
     if(state.mode==='background') { processBackground(); return; }
+    if(state.mode==='enhance') { processAIEnhance(); return; }
     try{
       resetOutput(); setStatus('Processing image…'); setResultStatus('');
       const {w,h}=dimensions(), canvas=document.createElement('canvas'); canvas.width=w;canvas.height=h;

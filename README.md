@@ -16,7 +16,7 @@ Cloud-first image tools for mobile and desktop browsers. The browser is used for
 
 - Static frontend: Cloudflare Pages, repository root
 - API: `/api/process` via `functions/api/process.js`
-- Processing: Cloudflare Images binding named `IMAGES`
+- Processing: Cloudflare Images binding named `IMAGES`, configured in the Cloudflare dashboard (the Pages Wrangler file does not declare an `images` field)
 - No Replicate token, Cloudinary secret, or browser-exposed API key is required
 - Uploaded bytes are passed to the Images binding in the request; this app does not write user images to R2, Images storage, or a history database
 - API responses use `Cache-Control: no-store`
@@ -26,7 +26,7 @@ Cloud-first image tools for mobile and desktop browsers. The browser is used for
 1. Keep the Cloudflare Pages project connected to this repository and deploy from the repository root.
 2. Confirm the Pages project uses the repository root as its build output directory and has no build command.
 3. In Cloudflare, enable the Images transformation feature for the account if prompted.
-4. Ensure the Pages Function has an Images binding named `IMAGES`. The included `wrangler.toml` declares this binding; if the Pages dashboard configuration takes precedence, add the same binding under **Settings → Functions → Bindings → Images**.
+4. In **Settings → Bindings → Images**, configure the Images binding with variable name `IMAGES`. The Pages Wrangler configuration intentionally does not contain an `[images]` section because Pages rejects that field in `wrangler.toml`.
 5. Deploy the `cloud-processing` branch for testing, or merge it into `main` after verification.
 6. Test every tool with a small image first, then test a larger image up to the 20 MB upload limit.
 

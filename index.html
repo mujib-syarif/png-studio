@@ -133,7 +133,7 @@
             <button class="secondary" id="cropCenter" type="button">Center crop area</button>
           </div>
           <div class="controls hidden" id="enhanceControls">
-            <div class="field"><label for="enhanceScale">AI super-resolution</label><select id="enhanceScale"><option value="2" selected>AI upscale · 2×</option></select></div>
+            <div class="field"><label for="enhanceScale">AI super-resolution</label><select id="enhanceScale"><option value="2" selected>AI upscale · up to 2×</option></select></div>
             <div class="field"><label for="enhanceSharp">Sharpen <span id="enhanceSharpLabel">35%</span></label><div class="range-row"><input id="enhanceSharp" type="range" min="0" max="100" value="35"><output id="enhanceSharpOut">35%</output></div></div>
             <div class="field"><label for="enhanceContrast">Contrast <span id="enhanceContrastLabel">105%</span></label><div class="range-row"><input id="enhanceContrast" type="range" min="80" max="130" value="105"><output id="enhanceContrastOut">105%</output></div></div>
             <div class="field"><label for="enhanceSaturation">Saturation <span id="enhanceSaturationLabel">105%</span></label><div class="range-row"><input id="enhanceSaturation" type="range" min="0" max="150" value="105"><output id="enhanceSaturationOut">105%</output></div></div>
@@ -265,6 +265,7 @@
         form.append('height', String(d.h));
         form.append('quality', $('resizeQuality').value);
         form.append('format', 'image/png');
+        form.append('fit', $('lockRatio').checked ? 'contain' : 'squeeze');
       } else if(state.mode === 'compress') {
         outputFormat = $('compressFormat').value;
         form.append('format', outputFormat);

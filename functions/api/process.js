@@ -129,7 +129,8 @@ export async function onRequestPost({ request, env }) {
       format = "image/png";
     }
 
-    const result = await pipeline.output({ format, quality, metadata: "none" }).response({
+    pipeline = pipeline.transform({ metadata: "none" });
+    const result = await pipeline.output({ format, quality }).response({
       headers: {
         "Cache-Control": "no-store, max-age=0",
         "Pragma": "no-cache",

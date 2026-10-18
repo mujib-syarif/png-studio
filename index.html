@@ -123,9 +123,7 @@
             <p class="sub" style="margin:0">Lower quality and smaller dimensions usually mean smaller files.</p>
           </div>
           <div class="controls hidden" id="backgroundControls">
-            <p class="sub" style="margin:0">AI removes the background and keeps the subject as a transparent PNG. Background removal runs on Cloudflare. Uploaded images are processed in memory and not saved as a project.</p>
-            <div class="field"><label for="bgModel">AI model</label><select id="bgModel"><option value="medium">Balanced — recommended</option><option value="small">Faster — lighter model</option></select></div>
-            <label class="check"><input id="bgPreview" type="checkbox" checked> Show transparent result in preview</label>
+            <p class="sub" style="margin:0">Cloudflare AI separates the foreground and returns a transparent PNG. The image is processed temporarily and is not added to a history.</p>
           </div>
           <div class="controls hidden" id="cropControls">
             <div class="field"><label for="cropRatio">Aspect ratio</label><select id="cropRatio"><option value="free">Free crop</option><option value="1:1">Square · 1:1</option><option value="4:5">Portrait · 4:5</option><option value="3:4">Portrait · 3:4</option><option value="16:9">Landscape · 16:9</option><option value="4:3">Landscape · 4:3</option><option value="original">Original ratio</option></select></div>

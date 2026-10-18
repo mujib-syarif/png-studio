@@ -79,7 +79,8 @@ export async function onRequestPost({ request, env }) {
     } else if (mode === "resize") {
       const width = number(form.get("width"), sourceWidth, 1, 12000);
       const height = number(form.get("height"), sourceHeight, 1, 12000);
-      pipeline = pipeline.transform({ width, height, fit: "scale-down" });
+      const fit = form.get("fit") === "squeeze" ? "squeeze" : "contain";
+      pipeline = pipeline.transform({ width, height, fit });
       quality = number(form.get("quality"), 92, 40, 100);
       format = outputFormat(form.get("format"));
     } else if (mode === "compress") {

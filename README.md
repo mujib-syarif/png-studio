@@ -15,8 +15,9 @@ Cloud-first image tools for mobile and desktop browsers. The browser is used for
 ## Cloud architecture
 
 - Static frontend: Cloudflare Pages, repository root
-- API: `/api/process` via `functions/api/process.js`
-- Processing: Cloudflare Images binding named `IMAGES`, configured in the Cloudflare dashboard (the Pages Wrangler file does not declare an `images` field)
+- Pages API gateway: `/api/process` via `functions/api/process.js`
+- Image processor: standalone Worker in `worker/`, named `png-studio-api`
+- Images binding `IMAGES` belongs to the standalone Worker, not the Pages project; Pages calls it through a Service binding named `API`
 - No Replicate token, Cloudinary secret, or browser-exposed API key is required
 - Uploaded bytes are passed to the Images binding in the request; this app does not write user images to R2, Images storage, or a history database
 - API responses use `Cache-Control: no-store`
@@ -25,10 +26,11 @@ Cloud-first image tools for mobile and desktop browsers. The browser is used for
 
 1. Keep the Cloudflare Pages project connected to this repository and deploy from the repository root.
 2. Confirm the Pages project uses the repository root as its build output directory and has no build command.
-3. In Cloudflare, enable the Images transformation feature for the account if prompted.
-4. In **Settings → Bindings → Images**, configure the Images binding with variable name `IMAGES`. The Pages Wrangler configuration intentionally does not contain an `[images]` section because Pages rejects that field in `wrangler.toml`.
-5. Deploy the `cloud-processing` branch for testing, or merge it into `main` after verification.
-6. Test every tool with a small image first, then test a larger image up to the 20 MB upload limit.
+3. Deploy the standalone Worker from the `worker/` directory using Wrangler (or import that directory as a separate Worker project). Its config is `worker/wrangler.toml`; it declares the `IMAGES` binding. Worker name: `png-studio-api`.
+4. In Cloudflare Pages → `png-studio` → **Settings → Bindings → Add → Service binding**, set Variable name to `API` and Service to `png-studio-api`, then redeploy Pages. This service binding keeps the API call server-to-server and avoids exposing an API secret in the browser.
+5. If prompted, enable Cloudflare Images transformations for the account and confirm the Worker has the `IMAGES` binding.
+6. Deploy the `cloud-processing` branch for testing, or merge it into `main` only after the preview is verified.
+7. Test every tool with a small image first, then test a larger image up to the 20 MB upload limit.
 
 ## Free-tier notes
 

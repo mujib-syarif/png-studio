@@ -1,33 +1,51 @@
 # PNG Studio
 
-A privacy-first browser image toolkit. No account required and no image uploads to a server.
+Cloud-first image tools for mobile and desktop browsers. The browser is used for file selection, preview, and downloading; image processing is handled by a Cloudflare Pages Function and the Cloudflare Images binding.
 
-## MVP features
+## Tools
 
-- Convert images to PNG, JPG, and WebP
-- Resize with optional aspect-ratio locking
-- Compress with quality and optional max-width controls
-- Preview and download processed images
-- Drag-and-drop upload and responsive mobile layout
-- Client-side processing using the Canvas API
+- Convert PNG, JPEG, and WebP
+- Resize
+- Compress and optionally limit width
+- AI background removal with Cloudflare Images foreground segmentation
+- Text watermark
+- Crop
+- AI upscaling and enhancement
 
-## Run locally
+## Cloud architecture
 
-Open `index.html` in a modern browser. No build step or package installation is required.
+- Static frontend: Cloudflare Pages, repository root
+- API: `/api/process` via `functions/api/process.js`
+- Processing: Cloudflare Images binding named `IMAGES`
+- No Replicate token, Cloudinary secret, or browser-exposed API key is required
+- Uploaded bytes are passed to the Images binding in the request; this app does not write user images to R2, Images storage, or a history database
+- API responses use `Cache-Control: no-store`
 
-## Deploy
+## Deploy and configure
 
-This is a static website and can be hosted on GitHub Pages or Cloudflare Pages. For Cloudflare Pages, use the repository root as the project directory, no build command, and `/` as the output directory.
+1. Keep the Cloudflare Pages project connected to this repository and deploy from the repository root.
+2. Confirm the Pages project uses the repository root as its build output directory and has no build command.
+3. In Cloudflare, enable the Images transformation feature for the account if prompted.
+4. Ensure the Pages Function has an Images binding named `IMAGES`. The included `wrangler.toml` declares this binding; if the Pages dashboard configuration takes precedence, add the same binding under **Settings → Functions → Bindings → Images**.
+5. Deploy the `cloud-processing` branch for testing, or merge it into `main` after verification.
+6. Test every tool with a small image first, then test a larger image up to the 20 MB upload limit.
 
-## Privacy and limitations
+## Free-tier notes
 
-Image processing happens locally in the browser. Animated GIFs are processed as a still image, and JPG conversion fills transparent areas with white. Browser support determines which output formats are available. Background removal and batch processing are future roadmap items.
+Cloudflare Images Free includes up to 5,000 unique transformations per month. Repeated identical transformations may be cached/count differently according to Cloudflare's current billing rules. This is a quota, not unlimited free AI. Review current limits before public launch.
 
-## Roadmap
+## Privacy and limits
 
-- Background removal
-- Batch processing
-- Social-media size presets
-- Accessibility and cross-browser testing
+- This app does not intentionally save uploaded files or create permanent processing history.
+- The file is sent over HTTPS to Cloudflare for processing and returned to the browser.
+- Cloudflare's service-side handling and retention are governed by Cloudflare's current terms and platform behavior; this app cannot promise that every transient copy disappears instantly.
+- The API rejects uploads larger than 20 MB and validates image MIME types.
+- A public endpoint can be abused; consider Cloudflare rate limiting or Turnstile before promoting the site widely.
+- Animated GIFs may be returned as a still image depending on the operation.
+- Background removal and AI upscaling depend on Cloudflare Images transformation support and quota.
+
+## Local development
+
+This project is deployed as a static frontend with a Pages Function. For realistic local API testing, use Wrangler with the Images binding configured. Do not replace the cloud endpoint with browser Canvas or local AI inference.
 
 Made with care by Mujib, S.Coc.

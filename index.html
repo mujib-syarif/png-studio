@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#10111a">
-  <meta name="description" content="PNG Studio — tool gambar online gratis untuk mengubah format, mengubah ukuran, dan mengompres gambar langsung di browser.">
+  <meta name="description" content="PNG Studio — cloud image tools untuk mengubah format, ukuran, kompresi, crop, watermark, background removal, dan enhancement.">
   <title>PNG Studio — Image Tools</title>
   <style>
     :root{color-scheme:dark;--bg:#0d0e14;--panel:#151722;--panel2:#1b1e2b;--line:#292d3d;--text:#f5f6ff;--muted:#9ca3b8;--purple:#9b8cff;--blue:#66d4ff;--good:#8de5c0;--radius:20px}
@@ -82,7 +82,7 @@
 <body>
   <header><div class="wrap" style="display:flex;align-items:center;justify-content:space-between"><a class="brand" href="#" aria-label="PNG Studio home"><span class="logo">P</span><span>PNG <span>Studio</span></span></a><div class="header-note">Online image tools</div></div></header>
   <main class="wrap">
-    <section class="hero"><div class="eyebrow"><span class="dot"></span> ONLINE IMAGE TOOLS</div><h1>Image tools.<br><em>Made simple.</em></h1><p>Resize, convert, compress, crop, add watermarks, and remove backgrounds directly in your browser.</p></section>
+    <section class="hero"><div class="eyebrow"><span class="dot"></span> ONLINE IMAGE TOOLS</div><h1>Image tools.<br><em>Made simple.</em></h1><p>Resize, convert, compress, crop, add watermarks, remove backgrounds, and enhance images in the cloud.</p></section>
     <section class="app" aria-label="Image toolkit">
       <nav class="tabs" aria-label="Image tools">
         <button class="tab active" data-mode="convert">Convert</button><button class="tab" data-mode="resize">Resize</button><button class="tab" data-mode="compress">Compress</button><button class="tab" data-mode="background">Remove background</button><button class="tab" data-mode="watermark">Watermark</button><button class="tab" data-mode="crop">Crop</button><button class="tab" data-mode="enhance">Enhance</button>
@@ -100,7 +100,7 @@
 <div class="compare-stage" id="compareStage"><img id="compareBefore" alt="Before processing"><div class="compare-after" id="compareAfterClip"><img id="compareAfter" alt="After processing"></div><span class="compare-label after">After</span><span class="compare-label before">Before</span></div>
 <input class="compare-range" id="compareRange" type="range" min="0" max="100" value="50" aria-label="Adjust before and after comparison">
 <div class="compare-note">Move the slider to compare the original image with the processed result.</div></section>
-          <div class="filemeta" id="fileMeta">Your image stays on your device while you use these tools.</div>
+          <div class="filemeta" id="fileMeta">Images are uploaded for temporary cloud processing and are not saved to a history.</div>
           <div class="action-row"><button class="secondary" id="replaceBtn" disabled>Replace image</button><button class="secondary" id="resetBtn" disabled>Reset</button></div>
           <div class="status" id="status" role="status" aria-live="polite"></div>
         </section>
@@ -123,7 +123,7 @@
             <p class="sub" style="margin:0">Lower quality and smaller dimensions usually mean smaller files.</p>
           </div>
           <div class="controls hidden" id="backgroundControls">
-            <p class="sub" style="margin:0">AI removes the background and keeps the subject as a transparent PNG. The first run downloads the AI model and may take a little while.</p>
+            <p class="sub" style="margin:0">AI removes the background and keeps the subject as a transparent PNG. Background removal runs on Cloudflare. Uploaded images are processed in memory and not saved as a project.</p>
             <div class="field"><label for="bgModel">AI model</label><select id="bgModel"><option value="medium">Balanced — recommended</option><option value="small">Faster — lighter model</option></select></div>
             <label class="check"><input id="bgPreview" type="checkbox" checked> Show transparent result in preview</label>
           </div>
@@ -139,7 +139,7 @@
             <div class="field"><label for="enhanceSharp">Sharpen <span id="enhanceSharpLabel">35%</span></label><div class="range-row"><input id="enhanceSharp" type="range" min="0" max="100" value="35"><output id="enhanceSharpOut">35%</output></div></div>
             <div class="field"><label for="enhanceContrast">Contrast <span id="enhanceContrastLabel">105%</span></label><div class="range-row"><input id="enhanceContrast" type="range" min="80" max="130" value="105"><output id="enhanceContrastOut">105%</output></div></div>
             <div class="field"><label for="enhanceSaturation">Saturation <span id="enhanceSaturationLabel">105%</span></label><div class="range-row"><input id="enhanceSaturation" type="range" min="0" max="150" value="105"><output id="enhanceSaturationOut">105%</output></div></div>
-            <p class="enhance-note">Uses an ESRGAN neural network to reconstruct finer-looking details at 2× resolution. The AI model is downloaded on first use and may take time on mobile devices.</p>
+            <p class="enhance-note">Cloudflare AI upscaling and image enhancement run on the server. Your phone only uploads the image and downloads the result.</p>
           </div>
           <div class="controls hidden" id="watermarkControls">
             <div class="field"><label for="watermarkText">Watermark text</label><input id="watermarkText" type="text" maxlength="80" value="© Mujib, S.Coc." placeholder="Enter watermark text"></div>
@@ -208,7 +208,7 @@
       preview.src=url; preview.classList.remove('hidden'); emptyState.classList.add('hidden'); drop.classList.add('has-image');
       $('fileMeta').textContent=file.name+' · '+img.naturalWidth+' × '+img.naturalHeight+' px · '+prettyBytes(file.size);
       $('width').value=img.naturalWidth; $('height').value=img.naturalHeight; initCrop();
-      setStatus('Image ready to process.','success'); updateButtons(); if(state.mode==='crop')$('cropOverlay').classList.add('visible'); cropDisplay();
+      setStatus('Image ready. Processing will run in the cloud.','success'); updateButtons(); if(state.mode==='crop')$('cropOverlay').classList.add('visible'); cropDisplay();
     };
     img.onerror=()=>{URL.revokeObjectURL(url);setStatus('Could not read this image. Try another file.','error');};
     img.src=url;
@@ -244,134 +244,103 @@
     if(w*h>40000000) throw new Error('For safety, the output is limited to 40 megapixels.');
     return {w,h};
   };
-  const processBackground = async () => {
-    if(!state.image || !state.originalUrl) return;
-    resetOutput(); $('processBtn').disabled=true; $('processBtn').textContent='Removing…';
-    setStatus('Loading AI background remover…'); setResultStatus('This can take a little while on the first run.');
+  const processImage = async () => {
+    if(!state.file || !state.image) return;
+    resetOutput();
+    $('processBtn').disabled=true;
+    $('processBtn').textContent='Uploading…';
+    setStatus('Uploading image securely to cloud…');
+    setResultStatus('Processing runs on Cloudflare. The image is not saved as a project or history.');
     try {
-      // Image processing stays in-browser; only the AI model is downloaded.
-      const { removeBackground } = await import('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.7.0/+esm');
-      setStatus('AI is removing the background…');
-      const blob = await removeBackground(state.originalUrl, {
-        // Prefer a worker so model inference doesn't lock the page's main thread.
-        proxyToWorker: true,
-        device: 'cpu',
-        model: $('bgModel').value === 'small' ? 'isnet_quint8' : 'isnet_fp16',
-        output: { format: 'image/png', quality: 0.95 },
-        progress: (key, current, total) => {
-          if(total > 0) {
-            const pct = Math.round(current/total*100);
-            setResultStatus('Preparing AI model: '+pct+'%');
-            setStatus('Preparing background remover… '+pct+'%');
-          } else {
-            setStatus('AI is separating the subject from the background…');
-            setResultStatus('This step can take longer on phones. Keep this tab open.');
-          }
-        }
+      const form = new FormData();
+      form.append('file', state.file, state.file.name || 'image');
+      form.append('mode', state.mode);
+      let outputFormat = 'image/png';
+
+      if(state.mode === 'convert') {
+        outputFormat = $('format').value;
+        form.append('format', outputFormat);
+        form.append('quality', $('quality').value);
+      } else if(state.mode === 'resize') {
+        const d = dimensions();
+        form.append('width', String(d.w));
+        form.append('height', String(d.h));
+        form.append('quality', $('resizeQuality').value);
+        form.append('format', 'image/png');
+      } else if(state.mode === 'compress') {
+        outputFormat = $('compressFormat').value;
+        form.append('format', outputFormat);
+        form.append('quality', $('compressQuality').value);
+        form.append('maxWidth', $('maxWidth').value || '0');
+      } else if(state.mode === 'crop') {
+        const d = dimensions();
+        form.append('x', String(Math.round(cropBox.x)));
+        form.append('y', String(Math.round(cropBox.y)));
+        form.append('width', String(d.w));
+        form.append('height', String(d.h));
+        form.append('format', 'image/png');
+      } else if(state.mode === 'watermark') {
+        form.append('text', $('watermarkText').value);
+        form.append('size', $('watermarkSize').value);
+        form.append('opacity', $('watermarkOpacity').value);
+        form.append('color', $('watermarkColor').value);
+        form.append('position', $('watermarkPosition').value);
+        form.append('format', 'image/png');
+      } else if(state.mode === 'enhance') {
+        form.append('sharpness', $('enhanceSharp').value);
+        form.append('contrast', $('enhanceContrast').value);
+        form.append('saturation', $('enhanceSaturation').value);
+        form.append('format', 'image/png');
+      } else if(state.mode === 'background') {
+        form.append('format', 'image/png');
+      }
+
+      $('processBtn').textContent = state.mode === 'background' ? 'Removing background…' :
+        state.mode === 'enhance' ? 'Enhancing in cloud…' : 'Processing in cloud…';
+      const response = await fetch('/api/process', { method: 'POST', body: form, credentials: 'same-origin' });
+      if(!response.ok) {
+        let message = 'Cloud processing failed (' + response.status + ').';
+        try { const data = await response.json(); if(data && data.error) message = data.error; } catch {}
+        throw new Error(message);
+      }
+      const blob = await response.blob();
+      if(!blob.size) throw new Error('Cloud returned an empty image. Please try again.');
+      state.output = blob;
+      state.outputType = blob.type || outputFormat;
+      state.outputUrl = URL.createObjectURL(blob);
+      updateCompare();
+      preview.src = state.originalUrl;
+      const resultImage = new Image();
+      const resultMeta = await new Promise(resolve => {
+        resultImage.onload = () => resolve({w: resultImage.naturalWidth, h: resultImage.naturalHeight});
+        resultImage.onerror = () => resolve({w: 0, h: 0});
+        resultImage.src = state.outputUrl;
       });
-      state.output=blob; state.outputType='image/png'; state.outputUrl=URL.createObjectURL(blob); updateCompare();
-      preview.src=state.originalUrl; // Keep the workspace as the original; show processed output only in Before/After and download.
-      const w=state.image.naturalWidth, h=state.image.naturalHeight;
-      $('resultBox').innerHTML='<div>Output: <strong>Transparent PNG</strong></div><div style="margin-top:5px">Dimensions: <strong>'+w+' × '+h+' px</strong></div><div style="margin-top:5px">File size: <strong>'+prettyBytes(blob.size)+'</strong></div><div style="margin-top:5px">Background removed in your browser.</div>';
-      $('downloadBtn').disabled=false; setStatus('Background removed! Your original image is unchanged.','success'); setResultStatus('Ready to download as PNG.','success');
+      const modeLabel = state.mode === 'background' ? 'Background removed · transparent PNG' :
+        state.mode === 'enhance' ? 'Cloud AI upscale and enhancement' :
+        state.mode === 'watermark' ? 'Watermark applied in cloud' :
+        state.mode === 'crop' ? 'Crop completed in cloud' :
+        state.mode === 'resize' ? 'Resize completed in cloud' :
+        state.mode === 'compress' ? 'Compression completed in cloud' : 'Format converted in cloud';
+      $('resultBox').innerHTML = '<div>Result: <strong>' + modeLabel + '</strong></div>' +
+        (resultMeta.w ? '<div style="margin-top:5px">Dimensions: <strong>' + resultMeta.w + ' × ' + resultMeta.h + ' px</strong></div>' : '') +
+        '<div style="margin-top:5px">File size: <strong>' + prettyBytes(blob.size) + '</strong></div>' +
+        '<div style="margin-top:5px">Storage: <strong>temporary processing only</strong></div>';
+      $('downloadBtn').disabled = false;
+      setStatus('Done! Image processed in the cloud.','success');
+      setResultStatus('Ready to download. No permanent history is created.','success');
     } catch(err) {
       console.error(err);
-      setStatus('Background remover failed to load or process. Check your internet connection and try again.','error');
-      setResultStatus('The AI model needs an internet connection on first use. If it keeps failing, try another image/browser.','error');
+      setStatus(err.message || 'Cloud processing failed.','error');
+      setResultStatus('Check that the Cloudflare Images binding is configured, then try again.','error');
     } finally {
-      $('processBtn').disabled=!state.image; $('processBtn').textContent='Process image';
+      $('processBtn').disabled = !state.image;
+      $('processBtn').textContent = 'Process image';
     }
-  };
-  const loadScript = src => new Promise((resolve,reject)=>{
-    const existing=[...document.scripts].find(s=>s.src===src);
-    if(existing){if(existing.dataset.loaded==='true')return resolve();existing.addEventListener('load',resolve,{once:true});existing.addEventListener('error',reject,{once:true});return;}
-    const script=document.createElement('script');script.src=src;script.async=true;
-    script.onload=()=>{script.dataset.loaded='true';resolve();};script.onerror=()=>reject(new Error('Could not load AI upscaling library.'));
-    document.head.appendChild(script);
-  });
-  const processAIEnhance = async () => {
-    if(!state.image||!state.originalUrl)return;
-    resetOutput();$('processBtn').disabled=true;$('processBtn').textContent='Loading AI…';
-    setStatus('Loading AI upscaler…');setResultStatus('Low-memory mode: the AI processes a resized working copy to reduce RAM use.');
-    let upscaler=null,workingCanvas=null;
-    try{
-      await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js');
-      await loadScript('https://cdn.jsdelivr.net/npm/@upscalerjs/default-model@1.0.0/dist/umd/index.min.js');
-      await loadScript('https://cdn.jsdelivr.net/npm/upscaler@1.0.0/dist/browser/umd/upscaler.min.js');
-      if(!window.tf||!window.Upscaler||!window.DefaultUpscalerJSModel)throw new Error('AI model did not initialize. Please refresh and try again.');
-      // Reduce working input size before inference to lower peak RAM on phones.
-      const src=state.image, maxSide=768, ratio=Math.min(1,maxSide/Math.max(src.naturalWidth,src.naturalHeight));
-      const workW=Math.max(1,Math.round(src.naturalWidth*ratio)),workH=Math.max(1,Math.round(src.naturalHeight*ratio));
-      workingCanvas=document.createElement('canvas');workingCanvas.width=workW;workingCanvas.height=workH;
-      const wctx=workingCanvas.getContext('2d');if(!wctx)throw new Error('Could not prepare the image for AI processing.');
-      wctx.imageSmoothingEnabled=true;wctx.imageSmoothingQuality='high';wctx.drawImage(src,0,0,workW,workH);
-      upscaler=new window.Upscaler({model:window.DefaultUpscalerJSModel});
-      $('processBtn').textContent='Enhancing…';setStatus('AI is enhancing a low-memory copy…');setResultStatus('Keep this tab open. Large images may take a while.');
-      const result=await upscaler.upscale(workingCanvas,{patchSize:32,padding:4,output:'src'});
-      const outImg=new Image();
-      await new Promise((resolve,reject)=>{outImg.onload=resolve;outImg.onerror=()=>reject(new Error('AI output could not be read.'));outImg.src=result;});
-      const targetW=Math.min(4096,src.naturalWidth*2),targetH=Math.min(4096,src.naturalHeight*2);
-      if(targetW*targetH>16000000)throw new Error('The 2× output is too large for safer mobile processing. Try a smaller image.');
-      const cv=document.createElement('canvas');cv.width=targetW;cv.height=targetH;
-      const cx=cv.getContext('2d');if(!cx)throw new Error('Could not create output canvas.');
-      cx.imageSmoothingEnabled=true;cx.imageSmoothingQuality='high';cx.drawImage(outImg,0,0,targetW,targetH);
-      const sharp=Number($('enhanceSharp').value)/100;
-      if(sharp>0){const temp=document.createElement('canvas');temp.width=targetW;temp.height=targetH;const tc=temp.getContext('2d');tc.drawImage(cv,0,0);cx.globalAlpha=sharp*.2;cx.filter='contrast('+(100+sharp*20)+'%)';cx.drawImage(temp,0,0);cx.filter='none';cx.globalAlpha=1;temp.width=1;temp.height=1;}
-      const blob=await new Promise(resolve=>cv.toBlob(resolve,'image/png'));
-      if(!blob)throw new Error('Could not export the enhanced image.');
-      state.output=blob;state.outputType='image/png';state.outputUrl=URL.createObjectURL(blob);updateCompare();preview.src=state.originalUrl;
-      $('resultBox').innerHTML='<div>Output: <strong>AI-enhanced PNG</strong></div><div style="margin-top:5px">Dimensions: <strong>'+targetW+' × '+targetH+' px</strong></div><div style="margin-top:5px">File size: <strong>'+prettyBytes(blob.size)+'</strong></div><div style="margin-top:5px">Engine: <strong>ESRGAN AI · 2× output</strong></div><div style="margin-top:5px">Processing: <strong>low-memory mode</strong></div>';
-      $('downloadBtn').disabled=false;setStatus('AI enhancement complete.','success');setResultStatus('Ready to download.','success');
-      cv.width=1;cv.height=1;
-    }catch(err){console.error(err);setStatus(err.message||'AI enhancement failed.','error');setResultStatus('If memory is high, close other tabs and try a smaller image.','error');}
-    finally{if(upscaler&&typeof upscaler.dispose==='function')try{upscaler.dispose();}catch(e){}if(workingCanvas){workingCanvas.width=1;workingCanvas.height=1;}if(window.tf&&window.tf.engine)try{window.tf.engine().startScope();window.tf.engine().endScope();}catch(e){}$('processBtn').disabled=!state.image;$('processBtn').textContent='Process image';}
-  };
-  const processImage = () => {
-    if(!state.image) return;
-    if(state.mode==='background') { processBackground(); return; }
-    if(state.mode==='enhance') { processAIEnhance(); return; }
-    try{
-      resetOutput(); setStatus('Processing image…'); setResultStatus('');
-      const {w,h}=dimensions(), canvas=document.createElement('canvas'); canvas.width=w;canvas.height=h;
-      const ctx=canvas.getContext('2d',{alpha:true}); if(!ctx) throw new Error('Your browser does not support canvas processing.');
-      const type=state.mode==='convert'?$('format').value:state.mode==='resize'||state.mode==='watermark'||state.mode==='crop'||state.mode==='enhance'?'image/png':$('compressFormat').value;
-      const quality=state.mode==='convert'?Number($('quality').value)/100:state.mode==='resize'?Number($('resizeQuality').value)/100:Number($('compressQuality').value)/100;
-      if(type==='image/jpeg'){ctx.fillStyle='#ffffff';ctx.fillRect(0,0,w,h);}
-      ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
-      if(state.mode==='crop'){ctx.drawImage(state.image,Math.round(cropBox.x),Math.round(cropBox.y),w,h,0,0,w,h);}
-      else if(state.mode==='enhance'){ctx.filter='contrast('+Number($('enhanceContrast').value)+'%) saturate('+Number($('enhanceSaturation').value)+'%)';ctx.drawImage(state.image,0,0,w,h);ctx.filter='none';const sharp=Number($('enhanceSharp').value)/100;if(sharp>0){const temp=document.createElement('canvas');temp.width=w;temp.height=h;const tc=temp.getContext('2d');tc.drawImage(canvas,0,0);ctx.globalAlpha=sharp*.35;ctx.filter='contrast('+(100+sharp*35)+'%)';ctx.drawImage(temp,0,0);ctx.filter='none';ctx.globalAlpha=1;}}
-      else ctx.drawImage(state.image,0,0,w,h);
-      if(state.mode==='watermark'){
-        const text=$('watermarkText').value.trim();
-        if(!text) throw new Error('Enter watermark text first.');
-        const fontSize=Math.max(12,Math.round(w*Number($('watermarkSize').value)/100));
-        const pad=Math.max(12,Math.round(Math.min(w,h)*0.025));
-        ctx.save();ctx.font='700 '+fontSize+'px system-ui, sans-serif';ctx.textBaseline='middle';
-        const metrics=ctx.measureText(text), tw=metrics.width, th=fontSize;
-        const pos=$('watermarkPosition').value;
-        let x=pad+tw/2,y=pad+th/2;
-        if(pos==='bottom-right'){x=w-pad-tw/2;y=h-pad-th/2;}
-        else if(pos==='bottom-left'){x=pad+tw/2;y=h-pad-th/2;}
-        else if(pos==='top-right'){x=w-pad-tw/2;y=pad+th/2;}
-        else if(pos==='center'){x=w/2;y=h/2;}
-        ctx.globalAlpha=Number($('watermarkOpacity').value)/100;
-        ctx.textAlign='center';ctx.lineJoin='round';ctx.strokeStyle='rgba(0,0,0,.55)';ctx.lineWidth=Math.max(2,fontSize*.09);ctx.strokeText(text,x,y,Math.max(1,w-pad*2));
-        ctx.fillStyle=$('watermarkColor').value;ctx.fillText(text,x,y,Math.max(1,w-pad*2));ctx.restore();
-      }
-      canvas.toBlob(blob=>{
-        if(!blob){setStatus('This format could not be created by your browser. Try JPG or WebP.','error');return;}
-        state.output=blob;state.outputType=blob.type||type;state.outputUrl=URL.createObjectURL(blob); updateCompare();
-        preview.src=state.originalUrl;
-        const diff=state.file.size-blob.size, pct=Math.round(Math.abs(diff)/state.file.size*100);
-        const sizeText=diff>=0?'smaller by '+pct+'%':'larger by '+pct+'%';
-        $('resultBox').innerHTML='<div>Output size: <strong>'+prettyBytes(blob.size)+'</strong></div><div style="margin-top:5px">Dimensions: <strong>'+w+' × '+h+' px</strong></div><div style="margin-top:5px">Format: <strong>'+blob.type.replace('image/','').toUpperCase()+'</strong></div><div style="margin-top:5px">Compared with original: '+sizeText+'</div>';
-        $('downloadBtn').disabled=false;setStatus('Done! Your original file remains unchanged.','success');setResultStatus('Ready to download.','success');
-      },type,quality);
-    }catch(err){setStatus(err.message||'Something went wrong while processing the image.','error');}
   };
   $('chooseBtn').addEventListener('click',()=>fileInput.click()); $('replaceBtn').addEventListener('click',()=>fileInput.click());
   fileInput.addEventListener('change',e=>{loadFile(e.target.files[0]);fileInput.value='';});
-  $('resetBtn').addEventListener('click',()=>{if(state.originalUrl)URL.revokeObjectURL(state.originalUrl);state.file=null;state.image=null;state.originalUrl=null;releaseOutput();preview.src='';preview.classList.add('hidden');emptyState.classList.remove('hidden');drop.classList.remove('has-image');$('fileMeta').textContent='Your image stays on your device while you use these tools.';setStatus('');setResultStatus('');$('resultBox').textContent='Output details will appear here after processing.';updateButtons();});
+  $('resetBtn').addEventListener('click',()=>{if(state.originalUrl)URL.revokeObjectURL(state.originalUrl);state.file=null;state.image=null;state.originalUrl=null;releaseOutput();preview.src='';preview.classList.add('hidden');emptyState.classList.remove('hidden');drop.classList.remove('has-image');$('fileMeta').textContent='Images are uploaded for temporary cloud processing and are not saved to a history.';setStatus('');setResultStatus('');$('resultBox').textContent='Output details will appear here after processing.';updateButtons();});
   tabs.forEach(t=>t.addEventListener('click',()=>setMode(t.dataset.mode)));
   drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('drag');});
   drop.addEventListener('dragleave',()=>drop.classList.remove('drag'));

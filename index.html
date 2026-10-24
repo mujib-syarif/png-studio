@@ -119,6 +119,7 @@
           <div class="controls hidden" id="compressControls">
             <div class="field"><label for="compressFormat">Output format</label><select id="compressFormat"><option value="image/webp">WebP — recommended</option><option value="image/jpeg">JPG</option><option value="image/png">PNG</option></select></div>
             <div class="field"><label for="compressQuality">Compression quality <span id="compressQualityLabel">75%</span></label><div class="range-row"><input id="compressQuality" type="range" min="10" max="100" value="75"><output id="compressQualityOut">75%</output></div></div>
+            <p id="compressQualityHelp" class="sub" style="margin:0">Quality affects JPG and WebP. PNG is lossless.</p>
             <div class="field"><label for="maxWidth">Maximum width (optional)</label><input id="maxWidth" type="number" min="1" max="12000" placeholder="Keep original width"></div>
             <p class="sub" style="margin:0">Lower quality and smaller dimensions usually mean smaller files.</p>
           </div>
@@ -136,7 +137,7 @@
           </div>
           <div class="controls hidden" id="enhanceControls">
             <div class="field"><label for="enhanceScale">AI super-resolution</label><select id="enhanceScale"><option value="2" selected>AI upscale · 2×</option></select></div>
-            <div class="field"><label for="enhanceSharp">Sharpen <span id="enhanceSharpLabel">35%</span></label><div class="range-row"><input id="enhanceSharp" type="range" min="0" max="100" value="35"><output id="enhanceSharpOut">35%</output></div></div>
+            <div class="field"><label for="enhanceSharp">Clarity boost <span id="enhanceSharpLabel">35%</span></label><div class="range-row"><input id="enhanceSharp" type="range" min="0" max="100" value="35"><output id="enhanceSharpOut">35%</output></div></div>
             <div class="field"><label for="enhanceContrast">Contrast <span id="enhanceContrastLabel">105%</span></label><div class="range-row"><input id="enhanceContrast" type="range" min="80" max="130" value="105"><output id="enhanceContrastOut">105%</output></div></div>
             <div class="field"><label for="enhanceSaturation">Saturation <span id="enhanceSaturationLabel">105%</span></label><div class="range-row"><input id="enhanceSaturation" type="range" min="0" max="150" value="105"><output id="enhanceSaturationOut">105%</output></div></div>
             <p class="enhance-note">Uses an ESRGAN neural network to reconstruct finer-looking details at 2× resolution. The AI model is downloaded on first use and may take time on mobile devices.</p>
@@ -196,6 +197,7 @@
     $('settingsTitle').textContent=mode==='convert'?'Conversion settings':mode==='resize'?'Resize settings':mode==='compress'?'Compression settings':mode==='background'?'Background remover':mode==='watermark'?'Watermark':mode==='enhance'?'Image enhance':'Crop settings';
     $('settingsSub').textContent=mode==='convert'?'Pick the format you need.':mode==='resize'?'Set the dimensions for your image.':mode==='compress'?'Balance file size and image quality.':mode==='background'?'Make the background transparent with AI.':mode==='watermark'?'Add a signature or brand to your image.':mode==='enhance'?'Upscale resolution and tune image clarity.':'Drag the crop box or its corners on the image.';
     resetOutput(); setResultStatus('');
+    if(state.image&&state.originalUrl)preview.src=state.originalUrl;
   };
   const loadFile = file => {
     if(!file) return;
@@ -226,7 +228,15 @@
     cropBox.x=x;cropBox.y=y;cropBox.w=Math.max(1,w);cropBox.h=Math.max(1,h);syncCropInputs();
   });
   const endCropDrag=()=>{cropDrag=null;};$('cropOverlay').addEventListener('pointerup',endCropDrag);$('cropOverlay').addEventListener('pointercancel',endCropDrag);
-  ['cropX','cropY','cropW','cropH'].forEach(id=>$(id).addEventListener('change',()=>{if(!state.image)return;cropBox.x=Math.max(0,Number($('cropX').value)||0);cropBox.y=Math.max(0,Number($('cropY').value)||0);cropBox.w=Math.max(1,Number($('cropW').value)||1);cropBox.h=Math.max(1,Number($('cropH').value)||1);cropBox.w=Math.min(cropBox.w,state.image.naturalWidth-cropBox.x);cropBox.h=Math.min(cropBox.h,state.image.naturalHeight-cropBox.y);syncCropInputs();}));
+  ['cropX','cropY','cropW','cropH'].forEach(id=>$(id).addEventListener('change',()=>{
+    if(!state.image)return;
+    const iw=state.image.naturalWidth,ih=state.image.naturalHeight;
+    cropBox.x=Math.min(iw-1,Math.max(0,Number($('cropX').value)||0));
+    cropBox.y=Math.min(ih-1,Math.max(0,Number($('cropY').value)||0));
+    cropBox.w=Math.min(Math.max(1,Number($('cropW').value)||1),iw-cropBox.x);
+    cropBox.h=Math.min(Math.max(1,Number($('cropH').value)||1),ih-cropBox.y);
+    syncCropInputs();
+  }));
 
   const dimensions = () => {
     const img=state.image; let w=img.naturalWidth,h=img.naturalHeight;
@@ -270,7 +280,7 @@
         }
       });
       state.output=blob; state.outputType='image/png'; state.outputUrl=URL.createObjectURL(blob); updateCompare();
-      preview.src=state.originalUrl; // Keep the workspace as the original; show processed output only in Before/After and download.
+      preview.src=$('bgPreview').checked?state.outputUrl:state.originalUrl;
       const w=state.image.naturalWidth, h=state.image.naturalHeight;
       $('resultBox').innerHTML='<div>Output: <strong>Transparent PNG</strong></div><div style="margin-top:5px">Dimensions: <strong>'+w+' × '+h+' px</strong></div><div style="margin-top:5px">File size: <strong>'+prettyBytes(blob.size)+'</strong></div><div style="margin-top:5px">Background removed in your browser.</div>';
       $('downloadBtn').disabled=false; setStatus('Background removed! Your original image is unchanged.','success'); setResultStatus('Ready to download as PNG.','success');
@@ -284,9 +294,14 @@
   };
   const loadScript = src => new Promise((resolve,reject)=>{
     const existing=[...document.scripts].find(s=>s.src===src);
-    if(existing){if(existing.dataset.loaded==='true')return resolve();existing.addEventListener('load',resolve,{once:true});existing.addEventListener('error',reject,{once:true});return;}
+    if(existing){
+      if(existing.dataset.loaded==='true')return resolve();
+      if(existing.dataset.failed==='true')existing.remove();
+      else{existing.addEventListener('load',resolve,{once:true});existing.addEventListener('error',()=>reject(new Error('Could not load AI upscaling library.')),{once:true});return;}
+    }
     const script=document.createElement('script');script.src=src;script.async=true;
-    script.onload=()=>{script.dataset.loaded='true';resolve();};script.onerror=()=>reject(new Error('Could not load AI upscaling library.'));
+    script.onload=()=>{script.dataset.loaded='true';resolve();};
+    script.onerror=()=>{script.dataset.failed='true';script.remove();reject(new Error('Could not load AI upscaling library.'));};
     document.head.appendChild(script);
   });
   const processAIEnhance = async () => {
@@ -310,17 +325,21 @@
       const result=await upscaler.upscale(workingCanvas,{patchSize:32,padding:4,output:'src'});
       const outImg=new Image();
       await new Promise((resolve,reject)=>{outImg.onload=resolve;outImg.onerror=()=>reject(new Error('AI output could not be read.'));outImg.src=result;});
-      const targetW=Math.min(4096,src.naturalWidth*2),targetH=Math.min(4096,src.naturalHeight*2);
-      if(targetW*targetH>16000000)throw new Error('The 2× output is too large for safer mobile processing. Try a smaller image.');
+      const requestedScale=Math.max(1,Number($('enhanceScale').value)||2);
+      const targetScale=Math.min(requestedScale,4096/src.naturalWidth,4096/src.naturalHeight,Math.sqrt(16000000/(src.naturalWidth*src.naturalHeight)));
+      if(targetScale<1)throw new Error('This image is too large to enhance safely. Try a smaller image.');
+      const targetW=Math.max(1,Math.round(src.naturalWidth*targetScale)),targetH=Math.max(1,Math.round(src.naturalHeight*targetScale));
       const cv=document.createElement('canvas');cv.width=targetW;cv.height=targetH;
       const cx=cv.getContext('2d');if(!cx)throw new Error('Could not create output canvas.');
-      cx.imageSmoothingEnabled=true;cx.imageSmoothingQuality='high';cx.drawImage(outImg,0,0,targetW,targetH);
+      cx.imageSmoothingEnabled=true;cx.imageSmoothingQuality='high';
+      cx.filter='contrast('+Number($('enhanceContrast').value)+'%) saturate('+Number($('enhanceSaturation').value)+'%)';
+      cx.drawImage(outImg,0,0,targetW,targetH);cx.filter='none';
       const sharp=Number($('enhanceSharp').value)/100;
       if(sharp>0){const temp=document.createElement('canvas');temp.width=targetW;temp.height=targetH;const tc=temp.getContext('2d');tc.drawImage(cv,0,0);cx.globalAlpha=sharp*.2;cx.filter='contrast('+(100+sharp*20)+'%)';cx.drawImage(temp,0,0);cx.filter='none';cx.globalAlpha=1;temp.width=1;temp.height=1;}
       const blob=await new Promise(resolve=>cv.toBlob(resolve,'image/png'));
       if(!blob)throw new Error('Could not export the enhanced image.');
       state.output=blob;state.outputType='image/png';state.outputUrl=URL.createObjectURL(blob);updateCompare();preview.src=state.originalUrl;
-      $('resultBox').innerHTML='<div>Output: <strong>AI-enhanced PNG</strong></div><div style="margin-top:5px">Dimensions: <strong>'+targetW+' × '+targetH+' px</strong></div><div style="margin-top:5px">File size: <strong>'+prettyBytes(blob.size)+'</strong></div><div style="margin-top:5px">Engine: <strong>ESRGAN AI · 2× output</strong></div><div style="margin-top:5px">Processing: <strong>low-memory mode</strong></div>';
+      $('resultBox').innerHTML='<div>Output: <strong>AI-enhanced PNG</strong></div><div style="margin-top:5px">Dimensions: <strong>'+targetW+' × '+targetH+' px</strong></div><div style="margin-top:5px">File size: <strong>'+prettyBytes(blob.size)+'</strong></div><div style="margin-top:5px">Engine: <strong>ESRGAN AI · '+targetScale.toFixed(2)+'× output</strong></div><div style="margin-top:5px">Processing: <strong>low-memory mode</strong></div>';
       $('downloadBtn').disabled=false;setStatus('AI enhancement complete.','success');setResultStatus('Ready to download.','success');
       cv.width=1;cv.height=1;
     }catch(err){console.error(err);setStatus(err.message||'AI enhancement failed.','error');setResultStatus('If memory is high, close other tabs and try a smaller image.','error');}
@@ -371,12 +390,22 @@
   };
   $('chooseBtn').addEventListener('click',()=>fileInput.click()); $('replaceBtn').addEventListener('click',()=>fileInput.click());
   fileInput.addEventListener('change',e=>{loadFile(e.target.files[0]);fileInput.value='';});
-  $('resetBtn').addEventListener('click',()=>{if(state.originalUrl)URL.revokeObjectURL(state.originalUrl);state.file=null;state.image=null;state.originalUrl=null;releaseOutput();preview.src='';preview.classList.add('hidden');emptyState.classList.remove('hidden');drop.classList.remove('has-image');$('fileMeta').textContent='Your image stays on your device while you use these tools.';setStatus('');setResultStatus('');$('resultBox').textContent='Output details will appear here after processing.';updateButtons();});
+  $('resetBtn').addEventListener('click',()=>{if(state.originalUrl)URL.revokeObjectURL(state.originalUrl);state.file=null;state.image=null;state.originalUrl=null;releaseOutput();preview.src='';preview.classList.add('hidden');emptyState.classList.remove('hidden');drop.classList.remove('has-image');$('cropOverlay').classList.remove('visible');$('fileMeta').textContent='Your image stays on your device while you use these tools.';setStatus('');setResultStatus('');$('resultBox').textContent='Output details will appear here after processing.';updateButtons();});
   tabs.forEach(t=>t.addEventListener('click',()=>setMode(t.dataset.mode)));
   drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('drag');});
   drop.addEventListener('dragleave',()=>drop.classList.remove('drag'));
   drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('drag');loadFile(e.dataTransfer.files[0]);});
   $('processBtn').addEventListener('click',processImage);
+  $('bgPreview').addEventListener('change',()=>{if(state.mode==='background'&&state.originalUrl)preview.src=state.outputUrl&&$('bgPreview').checked?state.outputUrl:state.originalUrl;});
+  const updateCompressQualityAvailability=()=>{
+    const isPng=$('compressFormat').value==='image/png';
+    $('compressQuality').disabled=isPng;
+    const value=isPng?'Not used':$('compressQuality').value+'%';
+    $('compressQualityLabel').textContent=value;$('compressQualityOut').textContent=value;
+    $('compressQualityHelp').textContent=isPng?'PNG is lossless, so quality has no effect. Reduce dimensions to lower file size.':'Quality affects JPG and WebP. Lower quality usually reduces file size, but results vary by image.';
+  };
+  $('compressFormat').addEventListener('change',updateCompressQualityAvailability);
+  updateCompressQualityAvailability();
   $('cropRatio').addEventListener('change',initCrop);window.addEventListener('resize',cropDisplay);
   $('cropCenter').addEventListener('click',initCrop);
   $('downloadBtn').addEventListener('click',()=>{if(!state.outputUrl)return;const ext=state.outputType==='image/jpeg'?'jpg':state.outputType.split('/')[1]||'png';const a=document.createElement('a');a.href=state.outputUrl;a.download=safeName(state.file.name)+'-'+state.mode+'.'+ext;document.body.appendChild(a);a.click();a.remove();});

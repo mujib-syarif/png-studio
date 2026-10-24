@@ -140,7 +140,7 @@
             <div class="field"><label for="enhanceSharp">Clarity boost <span id="enhanceSharpLabel">35%</span></label><div class="range-row"><input id="enhanceSharp" type="range" min="0" max="100" value="35"><output id="enhanceSharpOut">35%</output></div></div>
             <div class="field"><label for="enhanceContrast">Contrast <span id="enhanceContrastLabel">105%</span></label><div class="range-row"><input id="enhanceContrast" type="range" min="80" max="130" value="105"><output id="enhanceContrastOut">105%</output></div></div>
             <div class="field"><label for="enhanceSaturation">Saturation <span id="enhanceSaturationLabel">105%</span></label><div class="range-row"><input id="enhanceSaturation" type="range" min="0" max="150" value="105"><output id="enhanceSaturationOut">105%</output></div></div>
-            <p class="enhance-note">Uses an ESRGAN neural network to reconstruct finer-looking details at 2× resolution. The AI model is downloaded on first use and may take time on mobile devices.</p>
+            <p class="enhance-note">Uses an ESRGAN neural network to upscale the image. Large outputs are limited to 4,096 px per side and 16 megapixels, so the final scale can be below 2×. The AI model downloads on first use and may take time on mobile devices.</p>
           </div>
           <div class="controls hidden" id="watermarkControls">
             <div class="field"><label for="watermarkText">Watermark text</label><input id="watermarkText" type="text" maxlength="80" value="© Mujib, S.Coc." placeholder="Enter watermark text"></div>

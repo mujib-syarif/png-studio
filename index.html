@@ -167,7 +167,8 @@
 <script>
 (() => {
   const $ = id => document.getElementById(id);
-  const state = { file:null, image:null, output:null, outputType:null, mode:'convert', originalUrl:null, outputUrl:null };
+  const state = { file:null, image:null, output:null, outputType:null, mode:'convert', originalUrl:null, outputUrl:null, jobId:0 };
+  const invalidateJobs = () => { state.jobId += 1; };
   const tabs = [...document.querySelectorAll('.tab')];
   const drop = $('drop'), fileInput = $('fileInput'), preview = $('preview'), emptyState = $('emptyState');
   const setStatus = (message, kind='') => { $('status').textContent=message; $('status').className='status '+kind; };
@@ -192,6 +193,7 @@
   window.addEventListener('resize',()=>applyCompare(Number($('compareRange').value)));
   const updateButtons = () => { const loaded=!!state.image; $('replaceBtn').disabled=!loaded; $('resetBtn').disabled=!loaded; $('processBtn').disabled=!loaded; };
   const setMode = mode => {
+    invalidateJobs();
     state.mode=mode; tabs.forEach(t=>t.classList.toggle('active',t.dataset.mode===mode));
     $('convertControls').classList.toggle('hidden',mode!=='convert'); $('resizeControls').classList.toggle('hidden',mode!=='resize'); $('compressControls').classList.toggle('hidden',mode!=='compress'); $('backgroundControls').classList.toggle('hidden',mode!=='background'); $('cropControls').classList.toggle('hidden',mode!=='crop'); $('watermarkControls').classList.toggle('hidden',mode!=='watermark'); $('enhanceControls').classList.toggle('hidden',mode!=='enhance'); $('cropOverlay').classList.toggle('visible',mode==='crop'&&!!state.image);
     $('settingsTitle').textContent=mode==='convert'?'Conversion settings':mode==='resize'?'Resize settings':mode==='compress'?'Compression settings':mode==='background'?'Background remover':mode==='watermark'?'Watermark':mode==='enhance'?'Image enhance':'Crop settings';
@@ -203,6 +205,7 @@
     if(!file) return;
     if(!file.type.startsWith('image/')) { setStatus('Please choose a valid image file.','error'); return; }
     if(file.size>20*1024*1024) { setStatus('This file is over 20 MB. Please choose a smaller image.','error'); return; }
+    invalidateJobs();
     const url=URL.createObjectURL(file), img=new Image();
     img.onload=()=> {
       if(state.originalUrl) URL.revokeObjectURL(state.originalUrl);
@@ -256,11 +259,14 @@
   };
   const processBackground = async () => {
     if(!state.image || !state.originalUrl) return;
+    const jobId=++state.jobId;
+    const isCurrentJob=()=>state.jobId===jobId;
     resetOutput(); $('processBtn').disabled=true; $('processBtn').textContent='Removing…';
     setStatus('Loading AI background remover…'); setResultStatus('This can take a little while on the first run.');
     try {
       // Image processing stays in-browser; only the AI model is downloaded.
       const { removeBackground } = await import('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.7.0/+esm');
+      if(!isCurrentJob()) return;
       setStatus('AI is removing the background…');
       const blob = await removeBackground(state.originalUrl, {
         // Prefer a worker so model inference doesn't lock the page's main thread.
@@ -269,6 +275,7 @@
         model: $('bgModel').value === 'small' ? 'isnet_quint8' : 'isnet_fp16',
         output: { format: 'image/png', quality: 0.95 },
         progress: (key, current, total) => {
+          if(!isCurrentJob()) return;
           if(total > 0) {
             const pct = Math.round(current/total*100);
             setResultStatus('Preparing AI model: '+pct+'%');
@@ -279,6 +286,7 @@
           }
         }
       });
+      if(!isCurrentJob()) return;
       state.output=blob; state.outputType='image/png'; state.outputUrl=URL.createObjectURL(blob); updateCompare();
       preview.src=$('bgPreview').checked?state.outputUrl:state.originalUrl;
       const w=state.image.naturalWidth, h=state.image.naturalHeight;
@@ -289,7 +297,7 @@
       setStatus('Background remover failed to load or process. Check your internet connection and try again.','error');
       setResultStatus('The AI model needs an internet connection on first use. If it keeps failing, try another image/browser.','error');
     } finally {
-      $('processBtn').disabled=!state.image; $('processBtn').textContent='Process image';
+      if(isCurrentJob()) { $('processBtn').disabled=!state.image; $('processBtn').textContent='Process image'; }
     }
   };
   const loadScript = src => new Promise((resolve,reject)=>{
@@ -306,6 +314,8 @@
   });
   const processAIEnhance = async () => {
     if(!state.image||!state.originalUrl)return;
+    const jobId=++state.jobId;
+    const isCurrentJob=()=>state.jobId===jobId;
     resetOutput();$('processBtn').disabled=true;$('processBtn').textContent='Loading AI…';
     setStatus('Loading AI upscaler…');setResultStatus('Low-memory mode: the AI processes a resized working copy to reduce RAM use.');
     let upscaler=null,workingCanvas=null;
@@ -313,6 +323,7 @@
       await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js');
       await loadScript('https://cdn.jsdelivr.net/npm/@upscalerjs/default-model@1.0.0/dist/umd/index.min.js');
       await loadScript('https://cdn.jsdelivr.net/npm/upscaler@1.0.0/dist/browser/umd/upscaler.min.js');
+      if(!isCurrentJob()) return;
       if(!window.tf||!window.Upscaler||!window.DefaultUpscalerJSModel)throw new Error('AI model did not initialize. Please refresh and try again.');
       // Reduce working input size before inference to lower peak RAM on phones.
       const src=state.image, maxSide=768, ratio=Math.min(1,maxSide/Math.max(src.naturalWidth,src.naturalHeight));
@@ -323,8 +334,10 @@
       upscaler=new window.Upscaler({model:window.DefaultUpscalerJSModel});
       $('processBtn').textContent='Enhancing…';setStatus('AI is enhancing a low-memory copy…');setResultStatus('Keep this tab open. Large images may take a while.');
       const result=await upscaler.upscale(workingCanvas,{patchSize:32,padding:4,output:'src'});
+      if(!isCurrentJob()) return;
       const outImg=new Image();
       await new Promise((resolve,reject)=>{outImg.onload=resolve;outImg.onerror=()=>reject(new Error('AI output could not be read.'));outImg.src=result;});
+      if(!isCurrentJob()) return;
       const requestedScale=Math.max(1,Number($('enhanceScale').value)||2);
       const targetScale=Math.min(requestedScale,4096/src.naturalWidth,4096/src.naturalHeight,Math.sqrt(16000000/(src.naturalWidth*src.naturalHeight)));
       if(targetScale<1)throw new Error('This image is too large to enhance safely. Try a smaller image.');
@@ -337,18 +350,20 @@
       const sharp=Number($('enhanceSharp').value)/100;
       if(sharp>0){const temp=document.createElement('canvas');temp.width=targetW;temp.height=targetH;const tc=temp.getContext('2d');tc.drawImage(cv,0,0);cx.globalAlpha=sharp*.2;cx.filter='contrast('+(100+sharp*20)+'%)';cx.drawImage(temp,0,0);cx.filter='none';cx.globalAlpha=1;temp.width=1;temp.height=1;}
       const blob=await new Promise(resolve=>cv.toBlob(resolve,'image/png'));
+      if(!isCurrentJob()) return;
       if(!blob)throw new Error('Could not export the enhanced image.');
       state.output=blob;state.outputType='image/png';state.outputUrl=URL.createObjectURL(blob);updateCompare();preview.src=state.originalUrl;
       $('resultBox').innerHTML='<div>Output: <strong>AI-enhanced PNG</strong></div><div style="margin-top:5px">Dimensions: <strong>'+targetW+' × '+targetH+' px</strong></div><div style="margin-top:5px">File size: <strong>'+prettyBytes(blob.size)+'</strong></div><div style="margin-top:5px">Engine: <strong>ESRGAN AI · '+targetScale.toFixed(2)+'× output</strong></div><div style="margin-top:5px">Processing: <strong>low-memory mode</strong></div>';
       $('downloadBtn').disabled=false;setStatus('AI enhancement complete.','success');setResultStatus('Ready to download.','success');
       cv.width=1;cv.height=1;
-    }catch(err){console.error(err);setStatus(err.message||'AI enhancement failed.','error');setResultStatus('If memory is high, close other tabs and try a smaller image.','error');}
-    finally{if(upscaler&&typeof upscaler.dispose==='function')try{upscaler.dispose();}catch(e){}if(workingCanvas){workingCanvas.width=1;workingCanvas.height=1;}if(window.tf&&window.tf.engine)try{window.tf.engine().startScope();window.tf.engine().endScope();}catch(e){}$('processBtn').disabled=!state.image;$('processBtn').textContent='Process image';}
+    }catch(err){if(isCurrentJob()){console.error(err);setStatus(err.message||'AI enhancement failed.','error');setResultStatus('If memory is high, close other tabs and try a smaller image.','error');}}
+    finally{if(upscaler&&typeof upscaler.dispose==='function')try{upscaler.dispose();}catch(e){}if(workingCanvas){workingCanvas.width=1;workingCanvas.height=1;}if(window.tf&&window.tf.engine)try{window.tf.engine().startScope();window.tf.engine().endScope();}catch(e){}if(isCurrentJob()){$('processBtn').disabled=!state.image;$('processBtn').textContent='Process image';}}
   };
   const processImage = () => {
     if(!state.image) return;
     if(state.mode==='background') { processBackground(); return; }
     if(state.mode==='enhance') { processAIEnhance(); return; }
+    const jobId=++state.jobId;
     try{
       resetOutput(); setStatus('Processing image…'); setResultStatus('');
       const {w,h}=dimensions(), canvas=document.createElement('canvas'); canvas.width=w;canvas.height=h;
@@ -378,6 +393,7 @@
         ctx.fillStyle=$('watermarkColor').value;ctx.fillText(text,x,y,Math.max(1,w-pad*2));ctx.restore();
       }
       canvas.toBlob(blob=>{
+        if(state.jobId!==jobId) return;
         if(!blob){setStatus('This format could not be created by your browser. Try JPG or WebP.','error');return;}
         state.output=blob;state.outputType=blob.type||type;state.outputUrl=URL.createObjectURL(blob); updateCompare();
         preview.src=state.originalUrl;
@@ -390,7 +406,7 @@
   };
   $('chooseBtn').addEventListener('click',()=>fileInput.click()); $('replaceBtn').addEventListener('click',()=>fileInput.click());
   fileInput.addEventListener('change',e=>{loadFile(e.target.files[0]);fileInput.value='';});
-  $('resetBtn').addEventListener('click',()=>{if(state.originalUrl)URL.revokeObjectURL(state.originalUrl);state.file=null;state.image=null;state.originalUrl=null;releaseOutput();preview.src='';preview.classList.add('hidden');emptyState.classList.remove('hidden');drop.classList.remove('has-image');$('cropOverlay').classList.remove('visible');$('fileMeta').textContent='Your image stays on your device while you use these tools.';setStatus('');setResultStatus('');$('resultBox').textContent='Output details will appear here after processing.';updateButtons();});
+  $('resetBtn').addEventListener('click',()=>{invalidateJobs();if(state.originalUrl)URL.revokeObjectURL(state.originalUrl);state.file=null;state.image=null;state.originalUrl=null;releaseOutput();preview.src='';preview.classList.add('hidden');emptyState.classList.remove('hidden');drop.classList.remove('has-image');$('cropOverlay').classList.remove('visible');$('fileMeta').textContent='Your image stays on your device while you use these tools.';setStatus('');setResultStatus('');$('resultBox').textContent='Output details will appear here after processing.';updateButtons();});
   tabs.forEach(t=>t.addEventListener('click',()=>setMode(t.dataset.mode)));
   drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('drag');});
   drop.addEventListener('dragleave',()=>drop.classList.remove('drag'));

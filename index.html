@@ -194,6 +194,7 @@
   const updateButtons = () => { const loaded=!!state.image; $('replaceBtn').disabled=!loaded; $('resetBtn').disabled=!loaded; $('processBtn').disabled=!loaded; };
   const setMode = mode => {
     invalidateJobs();
+    $('processBtn').disabled=!state.image; $('processBtn').textContent='Process image';
     state.mode=mode; tabs.forEach(t=>t.classList.toggle('active',t.dataset.mode===mode));
     $('convertControls').classList.toggle('hidden',mode!=='convert'); $('resizeControls').classList.toggle('hidden',mode!=='resize'); $('compressControls').classList.toggle('hidden',mode!=='compress'); $('backgroundControls').classList.toggle('hidden',mode!=='background'); $('cropControls').classList.toggle('hidden',mode!=='crop'); $('watermarkControls').classList.toggle('hidden',mode!=='watermark'); $('enhanceControls').classList.toggle('hidden',mode!=='enhance'); $('cropOverlay').classList.toggle('visible',mode==='crop'&&!!state.image);
     $('settingsTitle').textContent=mode==='convert'?'Conversion settings':mode==='resize'?'Resize settings':mode==='compress'?'Compression settings':mode==='background'?'Background remover':mode==='watermark'?'Watermark':mode==='enhance'?'Image enhance':'Crop settings';
@@ -293,9 +294,11 @@
       $('resultBox').innerHTML='<div>Output: <strong>Transparent PNG</strong></div><div style="margin-top:5px">Dimensions: <strong>'+w+' × '+h+' px</strong></div><div style="margin-top:5px">File size: <strong>'+prettyBytes(blob.size)+'</strong></div><div style="margin-top:5px">Background removed in your browser.</div>';
       $('downloadBtn').disabled=false; setStatus('Background removed! Your original image is unchanged.','success'); setResultStatus('Ready to download as PNG.','success');
     } catch(err) {
-      console.error(err);
-      setStatus('Background remover failed to load or process. Check your internet connection and try again.','error');
-      setResultStatus('The AI model needs an internet connection on first use. If it keeps failing, try another image/browser.','error');
+      if(isCurrentJob()) {
+        console.error(err);
+        setStatus('Background remover failed to load or process. Check your internet connection and try again.','error');
+        setResultStatus('The AI model needs an internet connection on first use. If it keeps failing, try another image/browser.','error');
+      }
     } finally {
       if(isCurrentJob()) { $('processBtn').disabled=!state.image; $('processBtn').textContent='Process image'; }
     }

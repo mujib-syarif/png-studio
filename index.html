@@ -206,9 +206,10 @@
     if(!file) return;
     if(!file.type.startsWith('image/')) { setStatus('Please choose a valid image file.','error'); return; }
     if(file.size>20*1024*1024) { setStatus('This file is over 20 MB. Please choose a smaller image.','error'); return; }
-    invalidateJobs();
+    const loadId=++state.jobId;
     const url=URL.createObjectURL(file), img=new Image();
     img.onload=()=> {
+      if(state.jobId!==loadId){URL.revokeObjectURL(url);return;}
       if(state.originalUrl) URL.revokeObjectURL(state.originalUrl);
       state.file=file; state.image=img; state.originalUrl=url; resetOutput();
       preview.src=url; preview.classList.remove('hidden'); emptyState.classList.add('hidden'); drop.classList.add('has-image');
@@ -216,7 +217,10 @@
       $('width').value=img.naturalWidth; $('height').value=img.naturalHeight; initCrop();
       setStatus('Image ready to process.','success'); updateButtons(); if(state.mode==='crop')$('cropOverlay').classList.add('visible'); cropDisplay();
     };
-    img.onerror=()=>{URL.revokeObjectURL(url);setStatus('Could not read this image. Try another file.','error');};
+    img.onerror=()=>{
+      URL.revokeObjectURL(url);
+      if(state.jobId===loadId)setStatus('Could not read this image. Try another file.','error');
+    };
     img.src=url;
   };
   const cropBox={x:0,y:0,w:1,h:1};
